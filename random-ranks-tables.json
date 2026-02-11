@@ -1,0 +1,132 @@
+{
+  "ranks": [
+    {
+      "name": "Feeble",
+      "initialRankNumber": 1,
+      "columns": {
+        "column1": [1, 5],
+        "column2": [1, 5],
+        "column3": [1, 5],
+        "column4": [1, 5],
+        "column5": [1, 10]
+      }
+    },
+    {
+      "name": "Poor",
+      "initialRankNumber": 3,
+      "columns": {
+        "column1": [6, 10],
+        "column2": [6, 25],
+        "column3": [6, 10],
+        "column4": [6, 10],
+        "column5": [11, 20]
+      }
+    },
+    {
+      "name": "Typical",
+      "initialRankNumber": 5,
+      "columns": {
+        "column1": [11, 20],
+        "column2": [26, 75],
+        "column3": [11, 40],
+        "column4": [11, 15],
+        "column5": [21, 30]
+      }
+    },
+    {
+      "name": "Good",
+      "initialRankNumber": 8,
+      "columns": {
+        "column1": [21, 40],
+        "column2": [76, 95],
+        "column3": [41, 80],
+        "column4": [16, 40],
+        "column5": [31, 40]
+      }
+    },
+    {
+      "name": "Excellent",
+      "initialRankNumber": 16,
+      "columns": {
+        "column1": [41, 60],
+        "column2": [96, 100],
+        "column3": [81, 95],
+        "column4": [41, 50],
+        "column5": [41, 60]
+      }
+    },
+    {
+      "name": "Remarkable",
+      "initialRankNumber": 26,
+      "columns": {
+        "column1": [61, 80],
+        "column2": null,
+        "column3": [96, 100],
+        "column4": [51, 70],
+        "column5": [61, 70]
+      }
+    },
+    {
+      "name": "Incredible",
+      "initialRankNumber": 36,
+      "columns": {
+        "column1": [81, 96],
+        "column2": null,
+        "column3": null,
+        "column4": [71, 90],
+        "column5": [71, 80]
+      }
+    },
+    {
+      "name": "Amazing",
+      "initialRankNumber": 46,
+      "columns": {
+        "column1": [97, 100],
+        "column2": null,
+        "column3": null,
+        "column4": [91, 98],
+        "column5": [81, 95]
+      }
+    },
+    {
+      "name": "Monstrous",
+      "initialRankNumber": 63,
+      "columns": {
+        "column1": null,
+        "column2": null,
+        "column3": null,
+        "column4": [99, 100],
+        "column5": [96, 100]
+      }
+    }
+  ],
+  "abilityModifierTable": [
+    {
+      "roll": [1, 15],
+      "modification": "Reduce by one rank"
+    },
+    {
+      "roll": [16, 50],
+      "modification": "No change"
+    },
+    {
+      "roll": [51, 85],
+      "modification": "Raise by one rank"
+    },
+    {
+      "roll": [86, 95],
+      "modification": "Raise by three ranks"
+    },
+    {
+      "roll": [96, 100],
+      "modification": "Raise by four ranks"
+    }
+  ],
+  "originColumns": {
+    "Altered Human": 1,
+    "Mutant": 1,
+    "Hi-Tech": 3,
+    "Robot": 4,
+    "Alien": 5
+  }
+}

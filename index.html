@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marvel Superheroes RPG Character Generator</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🦸 Marvel Superheroes RPG</h1>
+            <h2>Character Generator</h2>
+            <button id="startOverBtn" class="btn btn-start-over">Start Over</button>
+        </header>
+
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div class="step active" data-step="1">1. Origin</div>
+            <div class="step" data-step="2">2. Abilities</div>
+            <div class="step" data-step="3">3. Secondary</div>
+            <div class="step" data-step="4">4. Special</div>
+            <div class="step" data-step="5">5. Details</div>
+        </div>
+
+        <div class="main-content">
+            <!-- Left: Generation Steps -->
+            <div class="generation-panel">
+                <!-- Step 1: Origin Selection -->
+                <div id="step1" class="step-panel active">
+                    <h3>Step 1: Choose Your Origin</h3>
+                    <button id="rollOrigin" class="btn btn-primary">🎲 Roll Random Origin</button>
+
+                    <div id="originResult" class="result-box hidden"></div>
+
+                    <div class="origin-grid">
+                        <div class="origin-card" data-origin="Altered Human">
+                            <h4>Altered Human</h4>
+                            <p class="dice-range">01-30</p>
+                        </div>
+                        <div class="origin-card" data-origin="Mutant">
+                            <h4>Mutant</h4>
+                            <p class="dice-range">31-60</p>
+                        </div>
+                        <div class="origin-card" data-origin="Hi-Tech">
+                            <h4>Hi-Tech</h4>
+                            <p class="dice-range">61-90</p>
+                        </div>
+                        <div class="origin-card" data-origin="Robot">
+                            <h4>Robot</h4>
+                            <p class="dice-range">91-95</p>
+                        </div>
+                        <div class="origin-card" data-origin="Alien">
+                            <h4>Alien</h4>
+                            <p class="dice-range">96-00</p>
+                        </div>
+                    </div>
+
+                    <button id="confirmOrigin" class="btn btn-success hidden">Continue →</button>
+                </div>
+
+                <!-- Step 2: Primary Abilities -->
+                <div id="step2" class="step-panel">
+                    <h3>Step 2: Roll Primary Abilities</h3>
+                    <button id="rollAllAbilities" class="btn btn-primary">🎲 Roll All Abilities</button>
+
+                    <table id="abilitiesTable" class="abilities-table">
+                        <thead>
+                            <tr>
+                                <th>Ability</th>
+                                <th>Roll</th>
+                                <th>Rank</th>
+                                <th>Value</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr data-ability="fighting">
+                                <td>Fighting (F)</td>
+                                <td class="roll-result">-</td>
+                                <td class="rank-result">-</td>
+                                <td class="value-result">-</td>
+                                <td><button class="btn-small" onclick="rerollAbility('fighting')">🔄</button></td>
+                            </tr>
+                            <tr data-ability="agility">
+                                <td>Agility (A)</td>
+                                <td class="roll-result">-</td>
+                                <td class="rank-result">-</td>
+                                <td class="value-result">-</td>
+                                <td><button class="btn-small" onclick="rerollAbility('agility')">🔄</button></td>
+                            </tr>
+                            <tr data-ability="strength">
+                                <td>Strength (S)</td>
+                                <td class="roll-result">-</td>
+                                <td class="rank-result">-</td>
+                                <td class="value-result">-</td>
+                                <td><button class="btn-small" onclick="rerollAbility('strength')">🔄</button></td>
+                            </tr>
+                            <tr data-ability="endurance">
+                                <td>Endurance (E)</td>
+                                <td class="roll-result">-</td>
+                                <td class="rank-result">-</td>
+                                <td class="value-result">-</td>
+                                <td><button class="btn-small" onclick="rerollAbility('endurance')">🔄</button></td>
+                            </tr>
+                            <tr data-ability="reason">
+                                <td>Reason (R)</td>
+                                <td class="roll-result">-</td>
+                                <td class="rank-result">-</td>
+                                <td class="value-result">-</td>
+                                <td><button class="btn-small" onclick="rerollAbility('reason')">🔄</button></td>
+                            </tr>
+                            <tr data-ability="intuition">
+                                <td>Intuition (I)</td>
+                                <td class="roll-result">-</td>
+                                <td class="rank-result">-</td>
+                                <td class="value-result">-</td>
+                                <td><button class="btn-small" onclick="rerollAbility('intuition')">🔄</button></td>
+                            </tr>
+                            <tr data-ability="psyche">
+                                <td>Psyche (P)</td>
+                                <td class="roll-result">-</td>
+                                <td class="rank-result">-</td>
+                                <td class="value-result">-</td>
+                                <td><button class="btn-small" onclick="rerollAbility('psyche')">🔄</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div id="originModifier" class="modifier-box hidden"></div>
+
+                    <div class="nav-buttons">
+                        <button class="btn btn-secondary" onclick="previousStep()">← Back</button>
+                        <button id="confirmAbilities" class="btn btn-success hidden">Continue →</button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Secondary Abilities -->
+                <div id="step3" class="step-panel">
+                    <h3>Step 3: Secondary Abilities</h3>
+
+                    <div class="secondary-abilities">
+                        <div class="stat-box">
+                            <label>Health (F+A+S+E)</label>
+                            <div id="healthValue" class="stat-value">0</div>
+                        </div>
+                        <div class="stat-box">
+                            <label>Karma (R+I+P)</label>
+                            <div id="karmaValue" class="stat-value">0</div>
+                        </div>
+                        <div class="stat-box" id="resourcesStatBox">
+                            <label>Resources</label>
+                            <div id="resourcesValue" class="stat-value">-</div>
+                            <div id="resourcesInfo" class="resources-info hidden"></div>
+                            <div id="normalResourceControls">
+                                <button class="btn-small" onclick="rollResources()">🎲 Roll</button>
+                            </div>
+                            <div id="hiTechResourceControls" class="hidden">
+                                <button class="btn-small btn-success" onclick="setResourcesGood()">Set to Good</button>
+                                <button class="btn-small" onclick="rollResources()">🎲 Roll (Typical + modifier)</button>
+                            </div>
+                        </div>
+                        <div class="stat-box">
+                            <label>Popularity</label>
+                            <div id="popularityValue" class="stat-value">0</div>
+                        </div>
+                    </div>
+
+                    <div class="nav-buttons">
+                        <button class="btn btn-secondary" onclick="previousStep()">← Back</button>
+                        <button class="btn btn-success" onclick="nextStep()">Continue →</button>
+                    </div>
+                </div>
+
+                <!-- Step 4: Special Abilities -->
+                <div id="step4" class="step-panel">
+                    <h3>Step 4: Special Abilities</h3>
+
+                    <!-- 4A: Allocation Roll -->
+                    <div class="allocation-section">
+                        <button id="rollAllocation" class="btn btn-primary">🎲 Roll for Powers, Talents & Contacts</button>
+
+                        <div id="allocationResult" class="result-box hidden">
+                            <h4>🎲 Rolled: <span id="allocationRoll">-</span></h4>
+                            <p><strong>Powers:</strong> <span id="powersInitial">-</span> initial / <span id="powersMax">-</span> maximum</p>
+                            <p><strong>Talents:</strong> <span id="talentsInitial">-</span> initial / <span id="talentsMax">-</span> maximum</p>
+                            <p><strong>Contacts:</strong> <span id="contactsInitial">-</span> initial / <span id="contactsMax">-</span> maximum</p>
+                        </div>
+                    </div>
+
+                    <!-- 4A.5: Purchase Additional Abilities -->
+                    <div id="purchaseSection" class="purchase-section hidden">
+                        <h4>Purchase Additional Abilities with Resources</h4>
+                        <p class="purchase-resources-display">
+                            Current Resources: <strong><span id="purchaseResourcesRank">-</span></strong>
+                            <span id="purchaseBaseInfo" class="purchase-base-info"></span>
+                        </p>
+
+                        <div class="purchase-grid">
+                            <div class="purchase-item">
+                                <div class="purchase-label">
+                                    <span>Powers: <span id="purchasePowerCurrent">0</span>/<span id="purchasePowerMax">0</span></span>
+                                    <span class="purchase-cost">(-2 ranks each)</span>
+                                </div>
+                                <button id="purchasePowerBtn" class="btn-small btn-primary" onclick="purchaseSlot('power')">+1 Power</button>
+                            </div>
+                            <div class="purchase-item">
+                                <div class="purchase-label">
+                                    <span>Talents: <span id="purchaseTalentCurrent">0</span>/<span id="purchaseTalentMax">0</span></span>
+                                    <span class="purchase-cost">(-1 rank each)</span>
+                                </div>
+                                <button id="purchaseTalentBtn" class="btn-small btn-primary" onclick="purchaseSlot('talent')">+1 Talent</button>
+                            </div>
+                            <div class="purchase-item">
+                                <div class="purchase-label">
+                                    <span>Contacts: <span id="purchaseContactCurrent">0</span>/<span id="purchaseContactMax">0</span></span>
+                                    <span class="purchase-cost">(-1 rank each)</span>
+                                </div>
+                                <button id="purchaseContactBtn" class="btn-small btn-primary" onclick="purchaseSlot('contact')">+1 Contact</button>
+                            </div>
+                        </div>
+
+                        <p class="help-text" id="purchaseHelp">Purchase additional slots above your initial allocation by permanently reducing Resources. Cannot reduce below Feeble.</p>
+                    </div>
+
+                    <!-- 4B: Powers Selection -->
+                    <div class="powers-section hidden" id="powersSection">
+                        <h4>Powers (<span id="powerSlotsUsed">0</span>/<span id="powerSlotsInitial">0</span> slots used, max <span id="powerSlotsMax">0</span>)</h4>
+
+                        <div class="power-buttons">
+                            <button id="rollRandomPower" class="btn btn-primary btn-small">🎲 Roll Random Power</button>
+                            <button id="choosePower" class="btn btn-secondary btn-small">➕ Choose Power</button>
+                        </div>
+
+                        <div id="powersList" class="powers-list">
+                            <!-- Power cards will be inserted here dynamically -->
+                            <p class="empty-state">No powers added yet. Click "Roll Random Power" or "Choose Power" to begin.</p>
+                        </div>
+
+                        <p class="help-text">ℹ️ Powers marked with ⭐⭐ cost 2 slots instead of 1</p>
+                    </div>
+
+                    <!-- 4C: Talents Selection -->
+                    <div class="talents-section hidden" id="talentsSection">
+                        <h4>Talents (<span id="talentSlotsUsed">0</span>/<span id="talentSlotsInitial">0</span> assigned, max <span id="talentSlotsMax">0</span>)</h4>
+
+                        <div class="talent-buttons">
+                            <button id="rollRandomTalent" class="btn btn-primary btn-small">Roll Random Talent</button>
+                            <button id="chooseTalent" class="btn btn-secondary btn-small">Choose Talent</button>
+                        </div>
+
+                        <div id="talentsList" class="talents-list">
+                            <p class="empty-state">No talents added yet. Click "Roll Random Talent" or "Choose Talent" to begin.</p>
+                        </div>
+
+                        <p class="help-text">Talents marked with * have an associated rank rolled on Column 2</p>
+                    </div>
+
+                    <!-- 4D: Contacts Selection -->
+                    <div class="contacts-section hidden" id="contactsSection">
+                        <h4>Contacts (<span id="contactSlotsUsed">0</span>/<span id="contactSlotsInitial">0</span> assigned, max <span id="contactSlotsMax">0</span>)</h4>
+
+                        <div class="contact-buttons">
+                            <button id="chooseContact" class="btn btn-secondary btn-small">Choose Contact</button>
+                        </div>
+
+                        <div id="contactsList" class="contacts-list">
+                            <p class="empty-state">No contacts added yet. Click "Choose Contact" to begin.</p>
+                        </div>
+                    </div>
+
+                    <!-- 4E: Equipment (unchanged) -->
+                    <div class="equipment-section hidden" id="equipmentSection">
+                        <h4>Equipment</h4>
+                        <textarea id="equipmentInput" rows="2" placeholder="Enter equipment (one per line)"></textarea>
+                    </div>
+
+                    <div class="nav-buttons">
+                        <button class="btn btn-secondary" onclick="previousStep()">← Back</button>
+                        <button id="confirmSpecialAbilities" class="btn btn-success hidden">Continue →</button>
+                    </div>
+                </div>
+
+                <!-- Step 5: Character Details -->
+                <div id="step5" class="step-panel">
+                    <h3>Step 5: Character Details</h3>
+
+                    <div class="form-group">
+                        <label>Character Name</label>
+                        <input type="text" id="characterName" placeholder="e.g., The Crimson Defender">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Real Name</label>
+                        <input type="text" id="realName" placeholder="e.g., John Smith">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Backstory</label>
+                        <textarea id="backstory" rows="6" placeholder="Describe your character's origin story..."></textarea>
+                    </div>
+
+                    <div class="nav-buttons">
+                        <button class="btn btn-secondary" onclick="previousStep()">← Back</button>
+                        <button class="btn btn-primary" onclick="generateCharacterSheet()">📄 Generate Character Sheet</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Character Summary -->
+            <div class="summary-panel">
+                <h3>Character Summary</h3>
+                <div id="characterSummary">
+                    <p class="empty-state">Start creating your character...</p>
+                </div>
+
+                <div class="export-buttons hidden" id="exportButtons">
+                    <button class="btn btn-secondary" onclick="exportJSON()">💾 Export JSON</button>
+                    <button class="btn btn-secondary" onclick="printCharacter()">🖨️ Print</button>
+                    <button class="btn btn-warning" onclick="resetCharacter()">🔄 New Character</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Power Selection -->
+    <div id="powerModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 id="modalTitle">Choose Power Category</h3>
+            <div id="modalBody">
+                <!-- Content inserted dynamically -->
+            </div>
+            <div class="modal-buttons">
+                <button id="modalCancel" class="btn btn-secondary">Cancel</button>
+                <button id="modalBack" class="btn btn-secondary hidden">← Back</button>
+                <button id="modalConfirm" class="btn btn-success hidden">Add Power</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal for Start Over -->
+    <div id="startOverModal" class="modal-overlay">
+        <div class="modal-content start-over-modal">
+            <h3>Are you sure?</h3>
+            <p>Starting over will erase all data for the current character. This cannot be undone.</p>
+            <div class="modal-buttons">
+                <button id="startOverCancel" class="btn btn-secondary">Cancel</button>
+                <button id="startOverConfirm" class="btn btn-danger">Start Over</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generic Alert Modal -->
+    <div id="alertModal" class="modal-overlay">
+        <div class="modal-content start-over-modal">
+            <h3 id="alertModalTitle">Notice</h3>
+            <p id="alertModalMessage"></p>
+            <div class="modal-buttons">
+                <button id="alertModalOk" class="btn btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generic Confirm Modal -->
+    <div id="confirmModal" class="modal-overlay">
+        <div class="modal-content start-over-modal">
+            <h3 id="confirmModalTitle">Are you sure?</h3>
+            <p id="confirmModalMessage"></p>
+            <div class="modal-buttons">
+                <button id="confirmModalCancel" class="btn btn-secondary">Cancel</button>
+                <button id="confirmModalOk" class="btn btn-danger">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Power Details Modal -->
+    <div id="powerDetailsModal" class="modal-overlay">
+        <div class="modal-content power-details-modal">
+            <h3 id="powerDetailsTitle">Power Details</h3>
+            <div id="powerDetailsBody">
+                <!-- Content inserted dynamically -->
+            </div>
+            <div class="modal-buttons">
+                <button id="powerDetailsClose" class="btn btn-primary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Talent Details Modal -->
+    <div id="talentDetailsModal" class="modal-overlay">
+        <div class="modal-content power-details-modal">
+            <h3 id="talentDetailsTitle">Talent Details</h3>
+            <div id="talentDetailsBody">
+                <!-- Content inserted dynamically -->
+            </div>
+            <div class="modal-buttons">
+                <button id="talentDetailsClose" class="btn btn-primary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Details Modal -->
+    <div id="contactDetailsModal" class="modal-overlay">
+        <div class="modal-content power-details-modal">
+            <h3 id="contactDetailsTitle">Contact Details</h3>
+            <div id="contactDetailsBody">
+                <!-- Content inserted dynamically -->
+            </div>
+            <div class="modal-buttons">
+                <button id="contactDetailsClose" class="btn btn-primary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load JavaScript files -->
+    <script src="js/data/ranks.js"></script>
+    <script src="js/data/origins.js"></script>
+    <script src="js/data/powers.js"></script>
+    <script src="js/data/power-details.js"></script>
+    <script src="js/data/talents.js"></script>
+    <script src="js/data/talent-details.js"></script>
+    <script src="js/data/contact-details.js"></script>
+    <script src="js/dice.js"></script>
+    <script src="js/abilities.js"></script>
+    <script src="js/character.js"></script>
+    <script src="js/ui.js"></script>
+</body>
+</html>

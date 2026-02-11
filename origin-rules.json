@@ -1,0 +1,164 @@
+{
+  "origins": {
+    "Altered Human": {
+      "diceRange": [1, 30],
+      "description": "Everyday people who have been accidentally or purposefully exposed to weird radiation, secret formulas, or chose to be instructed in strange and powerful talents.",
+      "examples": ["Fantastic Four", "Hulk", "Nick Fury", "Doctor Strange"],
+      "randomRanksColumn": 1,
+      "modifiers": {
+        "primaryAbilities": {
+          "type": "choose_one_to_raise",
+          "amount": 1,
+          "description": "After the primary ability ranks are rolled, altered humans may raise any single primary ability rank by one rank"
+        },
+        "resources": {
+          "type": "roll",
+          "description": "Roll normally for Resources"
+        },
+        "popularity": {
+          "type": "roll",
+          "description": "Roll normally for Popularity"
+        },
+        "powers": {
+          "type": "standard",
+          "count": "3-5",
+          "description": "Standard power generation"
+        }
+      },
+      "specialRules": []
+    },
+    "Mutant": {
+      "diceRange": [31, 60],
+      "description": "Members of the race of Homo Superior, a new race of man born from the race of Homo Sapiens. Mutant powers often first manifest themselves in the teen-age years. Mutants are generally feared and disliked by the populace at large.",
+      "examples": ["X-Men", "X-Factor", "New Mutants"],
+      "randomRanksColumn": 1,
+      "modifiers": {
+        "primaryAbilities": {
+          "endurance": {
+            "type": "raise",
+            "amount": 1,
+            "description": "Endurance is raised by one rank"
+          }
+        },
+        "resources": {
+          "type": "reduce",
+          "amount": 1,
+          "description": "Resources are reduced by one rank"
+        },
+        "popularity": {
+          "type": "set",
+          "value": 0,
+          "description": "Starting Popularity is always 0"
+        },
+        "powers": {
+          "type": "bonus",
+          "amount": 1,
+          "maximum": 5,
+          "description": "Mutants gain one additional Power, up to the total number of Powers available to the Hero (maximum of 5)"
+        }
+      },
+      "specialRules": [
+        "Mutants gain and lose Popularity at a slower rate than other character types",
+        "The majority of a mutant's Powers are inborn as opposed to equipment-based",
+        "They may be affected by mutant detection and mutant nullification devices"
+      ]
+    },
+    "Hi-Tech": {
+      "diceRange": [61, 90],
+      "description": "Also called Hi-Tech Wonders, these heroes derive their abilities solely through equipment, whether that equipment is mystical or technological in nature. High technology heroes start with lower primary ability scores and in addition may not use their powers without their equipment; however, they receive many other benefits.",
+      "examples": ["Iron Man", "Captain Britain"],
+      "randomRanksColumn": 3,
+      "modifiers": {
+        "primaryAbilities": {
+          "reason": {
+            "type": "raise",
+            "amount": 2,
+            "description": "The initial Reason is raised by two ranks (If Good is rolled, then initial reason is Remarkable)"
+          }
+        },
+        "resources": {
+          "type": "set_or_roll",
+          "defaultValue": "Good",
+          "description": "Initial Resources are set at Good, or optionally rolled"
+        },
+        "popularity": {
+          "type": "roll",
+          "description": "Roll normally for Popularity"
+        },
+        "powers": {
+          "type": "standard",
+          "count": "3-5",
+          "description": "Standard power generation, but all powers are equipment-based"
+        }
+      },
+      "specialRules": [
+        "High technology heroes must have at least one Contact, and they must declare what that Contact is before starting play. This Contact represents the organization that the player-character works for (or, if Resources are high enough, owns)",
+        "At least one Talent chosen by the player must be Scientific or professional in nature",
+        "If, when generating Powers, the high tech wonder chooses Body Armor as a Power, the high technology hero may choose to have all his Powers combined into a battlesuit (a la Iron Man)"
+      ]
+    },
+    "Robot": {
+      "diceRange": [91, 95],
+      "description": "Robots are artificially-created sentient beings, including organic constructs, clones, life-module decoys, mystically-powered golems, synthezoids, androids, and robots.",
+      "examples": ["Machine Man", "Vision", "Jocasta", "Ultron", "Deathlok (robotic form)"],
+      "randomRanksColumn": 4,
+      "modifiers": {
+        "primaryAbilities": {
+          "type": "standard",
+          "description": "No special primary ability modifiers"
+        },
+        "resources": {
+          "type": "roll",
+          "description": "Roll normally for Resources"
+        },
+        "popularity": {
+          "type": "set",
+          "value": 0,
+          "description": "Popularity is reduced to 0 (like mutants, robots have a hard time being accepted by the populace at large). They suffer no further penalty regarding earning Popularity"
+        },
+        "powers": {
+          "type": "standard",
+          "count": "3-5",
+          "description": "Standard power generation"
+        }
+      },
+      "specialRules": [
+        "All player-character robots may heal normally, simulating internal repair functions",
+        "There is no Karma loss for killing a robot or allowing a robot to be deactivated. A robot may potentially be reactivated after it has 'died'",
+        "A 'dead' robot must be reactivated by outside forces, and will return with Karma set at 0"
+      ]
+    },
+    "Alien": {
+      "diceRange": [96, 100],
+      "description": "'Alien' is a blanket term representing those individuals from other civilizations, planets, dimensions or races of man. These may include Homo Mermanus, Asgardians, Denizens of the Dark Dimension, Atlanteans, Olympians, Eternals, Kree, Skrulls, and Shi'ar, as well as races that have yet to be discovered in the Marvel Universe. Aliens have the potential of being incredibly powerful, but have limited secondary abilities.",
+      "examples": ["Thor (Asgardian)", "Namor (Homo Mermanus)", "Kree Warriors", "Skrull Infiltrators"],
+      "randomRanksColumn": 5,
+      "modifiers": {
+        "primaryAbilities": {
+          "type": "standard",
+          "description": "No special primary ability modifiers"
+        },
+        "resources": {
+          "type": "set",
+          "value": "Poor",
+          "description": "Starting Resources are set at Poor"
+        },
+        "popularity": {
+          "type": "roll",
+          "description": "Roll normally for Popularity"
+        },
+        "powers": {
+          "type": "reduced",
+          "amount": -1,
+          "minimum": 2,
+          "description": "Aliens gain one less Power (minimum of two)"
+        }
+      },
+      "specialRules": [
+        "Alien powers may be natural or the result of Equipment carried. The player must declare whether any Power is inborn to his race or external",
+        "An alien character starts with one Contact (maximum). This is usually the alien's home race, dimension, or people",
+        "Those characters who do not choose the race as one of their Contacts are considered outcasts of that race, planet, or dimension (note to Judges: Outcasts are usually hunted down by others of their race)"
+      ]
+    }
+  }
+}

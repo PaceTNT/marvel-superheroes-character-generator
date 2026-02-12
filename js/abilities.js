@@ -12,9 +12,49 @@ function calculateKarma(abilities) {
            abilities.psyche.value;
 }
 
+/**
+ * Calculate popularity based on base value and modifiers.
+ * Rules:
+ * - Base: 10 for most, 0 for Mutant/Robot
+ * - +10 if identity is publicly known (no secret ID)
+ * - -5 if identity is secret
+ * - -5 if hero hangs out with known mutants (non-mutant only)
+ * - -5 if hero is generally unpopular (aliens default, or player choice)
+ * - Secret ID popularity cannot be negative (clamped to 0)
+ */
+function calculatePopularity(character) {
+    const pop = character.secondaryAbilities.popularity;
+    let total = pop.base;
+
+    if (pop.hasSecretId) {
+        total -= 5;
+    } else {
+        total += 10;
+    }
+
+    if (pop.hangsWithMutants && character.origin !== 'Mutant') {
+        total -= 5;
+    }
+
+    if (pop.generallyUnpopular) {
+        total -= 5;
+    }
+
+    pop.heroPopularity = total;
+
+    if (pop.hasSecretId) {
+        // Secret ID popularity cannot start negative
+        pop.secretPopularity = Math.max(0, total);
+    } else {
+        pop.secretPopularity = null;
+    }
+}
+
 function applyOriginModifiers(character) {
     const origin = character.origin;
 
+    // Set base popularity by origin
+    const pop = character.secondaryAbilities.popularity;
     switch(origin) {
         case "Mutant":
             // Endurance +1 rank
@@ -22,8 +62,8 @@ function applyOriginModifiers(character) {
             character.primaryAbilities.endurance.rank = newEnduranceRank;
             character.primaryAbilities.endurance.value = getRankValue(newEnduranceRank);
 
-            // Popularity = 0
-            character.secondaryAbilities.popularity = 0;
+            // Mutant base popularity = 0
+            pop.base = 0;
             // Note: Mutant Resources -1 rank is applied during resource rolling in Step 3
             break;
 
@@ -33,17 +73,29 @@ function applyOriginModifiers(character) {
             character.primaryAbilities.reason.rank = newReasonRank;
             character.primaryAbilities.reason.value = getRankValue(newReasonRank);
             // Note: Hi-Tech Resources handled in Step 3 (choice of Good or Typical + modifier)
+            pop.base = 10;
             break;
 
         case "Robot":
-            // Popularity = 0
-            character.secondaryAbilities.popularity = 0;
+            // Robot base popularity = 0
+            pop.base = 0;
             break;
 
         case "Alien":
             // Note: Alien Resources (Poor + modifier) handled in Step 3
+            pop.base = 10;
+            // Aliens default to generally unpopular
+            pop.generallyUnpopular = true;
+            break;
+
+        default:
+            // Altered Human and others: base 10
+            pop.base = 10;
             break;
     }
+
+    // Calculate initial popularity
+    calculatePopularity(character);
 
     return character;
 }

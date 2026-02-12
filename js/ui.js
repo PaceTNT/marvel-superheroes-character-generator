@@ -21,6 +21,7 @@ function initializeEventListeners() {
         updateSecondaryAbilities();
         nextStep();
         setupResourcesUI();
+        setupPopularityUI();
     });
 
     // Character Details
@@ -193,6 +194,95 @@ function updateSecondaryAbilities() {
     document.getElementById('karmaValue').textContent = karma;
 
     updateSummary();
+}
+
+/**
+ * Set up the Popularity UI in Step 3 based on the character's origin.
+ * Shows checkboxes for Secret ID, mutant association, and generally unpopular.
+ */
+function setupPopularityUI() {
+    const origin = currentCharacter.origin;
+    const pop = currentCharacter.secondaryAbilities.popularity;
+
+    // Show controls
+    document.getElementById('popularityControls').classList.remove('hidden');
+
+    // Hide "hangs with mutants" for mutants (doesn't apply)
+    const mutantAssocOption = document.getElementById('mutantAssocOption');
+    if (origin === 'Mutant') {
+        mutantAssocOption.classList.add('hidden');
+        pop.hangsWithMutants = false;
+    } else {
+        mutantAssocOption.classList.remove('hidden');
+    }
+
+    // Set default checkbox states based on origin
+    const unpopularCheck = document.getElementById('unpopularCheck');
+    if (origin === 'Alien') {
+        unpopularCheck.checked = true;
+        pop.generallyUnpopular = true;
+    }
+
+    // Sync checkboxes with character state
+    document.getElementById('secretIdCheck').checked = pop.hasSecretId;
+    document.getElementById('mutantAssocCheck').checked = pop.hangsWithMutants;
+    unpopularCheck.checked = pop.generallyUnpopular;
+
+    // Calculate and display
+    updatePopularityDisplay();
+}
+
+/**
+ * Handle changes to popularity modifier checkboxes.
+ */
+function handlePopularityChange() {
+    const pop = currentCharacter.secondaryAbilities.popularity;
+
+    pop.hasSecretId = document.getElementById('secretIdCheck').checked;
+    pop.hangsWithMutants = document.getElementById('mutantAssocCheck').checked;
+    pop.generallyUnpopular = document.getElementById('unpopularCheck').checked;
+
+    calculatePopularity(currentCharacter);
+    updatePopularityDisplay();
+    updateSummary();
+    saveCharacterToLocalStorage();
+}
+
+/**
+ * Update the popularity display value and info text.
+ */
+function updatePopularityDisplay() {
+    calculatePopularity(currentCharacter);
+    const pop = currentCharacter.secondaryAbilities.popularity;
+
+    let displayText;
+    if (pop.hasSecretId) {
+        displayText = `(${pop.heroPopularity})/(${pop.secretPopularity})`;
+    } else {
+        displayText = `${pop.heroPopularity}`;
+    }
+
+    document.getElementById('popularityValue').textContent = displayText;
+
+    // Build info text showing breakdown
+    const infoParts = [`Base: ${pop.base}`];
+    if (pop.hasSecretId) {
+        infoParts.push('Secret ID: -5');
+    } else {
+        infoParts.push('Public ID: +10');
+    }
+    if (pop.hangsWithMutants && currentCharacter.origin !== 'Mutant') {
+        infoParts.push('Mutant assoc: -5');
+    }
+    if (pop.generallyUnpopular) {
+        infoParts.push('Unpopular: -5');
+    }
+
+    const infoEl = document.getElementById('popularityInfo');
+    infoEl.textContent = infoParts.join(' | ');
+    infoEl.classList.remove('hidden');
+
+    saveCharacterToLocalStorage();
 }
 
 /**
@@ -491,7 +581,16 @@ function updateSummary() {
         if (currentCharacter.secondaryAbilities.resources) {
             html += `<p><strong>Resources:</strong> ${currentCharacter.secondaryAbilities.resources.rank}</p>`;
         }
-        html += `<p><strong>Popularity:</strong> ${currentCharacter.secondaryAbilities.popularity}</p>`;
+        const pop = currentCharacter.secondaryAbilities.popularity;
+        if (pop && typeof pop === 'object') {
+            if (pop.hasSecretId) {
+                html += `<p><strong>Popularity:</strong> (${pop.heroPopularity})/(${pop.secretPopularity})</p>`;
+            } else {
+                html += `<p><strong>Popularity:</strong> ${pop.heroPopularity}</p>`;
+            }
+        } else {
+            html += `<p><strong>Popularity:</strong> ${pop}</p>`;
+        }
     }
 
     // Powers
@@ -562,7 +661,13 @@ function generateCharacterSheet() {
         <p>Health: ${currentCharacter.secondaryAbilities.health}</p>
         <p>Karma: ${currentCharacter.secondaryAbilities.karma}</p>
         <p>Resources: ${currentCharacter.secondaryAbilities.resources ? currentCharacter.secondaryAbilities.resources.rank : 'N/A'}</p>
-        <p>Popularity: ${currentCharacter.secondaryAbilities.popularity}</p>
+        <p>Popularity: ${(() => {
+            const p = currentCharacter.secondaryAbilities.popularity;
+            if (p && typeof p === 'object') {
+                return p.hasSecretId ? `(${p.heroPopularity})/(${p.secretPopularity})` : p.heroPopularity;
+            }
+            return p;
+        })()}</p>
 
         ${currentCharacter.powerDetails.list.length ? `<h4>Powers</h4>${currentCharacter.powerDetails.list.map(p => {
             const details = typeof POWER_DETAILS_DATA !== 'undefined' ? POWER_DETAILS_DATA[p.name] : null;

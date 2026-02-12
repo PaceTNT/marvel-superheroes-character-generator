@@ -752,6 +752,41 @@ header h2 {
     font-weight: bold;
 }
 
+/* Popularity Controls (Step 3) */
+.stat-box-popularity {
+    grid-column: 1 / -1;
+}
+
+.popularity-controls {
+    margin-top: 10px;
+    text-align: left;
+}
+
+.popularity-option {
+    margin: 6px 0;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.9em;
+    color: #333;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: #ED1D24;
+}
+
+.pop-modifier {
+    color: #888;
+    font-size: 0.85em;
+}
+
 /* Resources Info (Step 3) */
 .resources-info {
     font-size: 0.8em;

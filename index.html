@@ -160,9 +160,31 @@
                                 <button class="btn-small" onclick="rollResources()">🎲 Roll (Typical + modifier)</button>
                             </div>
                         </div>
-                        <div class="stat-box">
+                        <div class="stat-box stat-box-popularity">
                             <label>Popularity</label>
                             <div id="popularityValue" class="stat-value">0</div>
+                            <div id="popularityInfo" class="resources-info hidden"></div>
+                            <div id="popularityControls" class="popularity-controls hidden">
+                                <div class="popularity-option">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="secretIdCheck" onchange="handlePopularityChange()">
+                                        <span>Secret Identity <span class="pop-modifier">(-5)</span></span>
+                                    </label>
+                                </div>
+                                <div class="popularity-option" id="mutantAssocOption">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="mutantAssocCheck" onchange="handlePopularityChange()">
+                                        <span>Hangs with mutants <span class="pop-modifier">(-5)</span></span>
+                                    </label>
+                                </div>
+                                <div class="popularity-option">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="unpopularCheck" onchange="handlePopularityChange()">
+                                        <span>Generally unpopular <span class="pop-modifier">(-5)</span></span>
+                                    </label>
+                                </div>
+                                <p class="help-text" id="popularityHelp">No secret ID = publicly known (+10). Secret ID cannot start with negative Popularity.</p>
+                            </div>
                         </div>
                     </div>
 

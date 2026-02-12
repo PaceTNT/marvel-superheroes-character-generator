@@ -15,7 +15,14 @@ let currentCharacter = {
         karma: 0,
         resources: null,      // Current resources (after purchases)
         baseResources: null,  // Resources before purchasing deductions
-        popularity: 0
+        popularity: {
+            base: 10,                // 10 for most, 0 for Mutant/Robot
+            hasSecretId: false,
+            hangsWithMutants: false,  // Only for non-Mutants
+            generallyUnpopular: false, // Aliens default true
+            heroPopularity: 10,
+            secretPopularity: null    // null if no secret ID
+        }
     },
     // Powers with detailed tracking
     powerDetails: {
@@ -103,7 +110,14 @@ function resetCharacter() {
             karma: 0,
             resources: null,
             baseResources: null,
-            popularity: 0
+            popularity: {
+                base: 10,
+                hasSecretId: false,
+                hangsWithMutants: false,
+                generallyUnpopular: false,
+                heroPopularity: 10,
+                secretPopularity: null
+            }
         },
         powerDetails: {
             roll: null,
@@ -166,6 +180,17 @@ function resetAllUI() {
     document.getElementById('karmaValue').textContent = '0';
     document.getElementById('resourcesValue').textContent = '-';
     document.getElementById('popularityValue').textContent = '0';
+    document.getElementById('popularityInfo').textContent = '';
+    document.getElementById('popularityInfo').classList.add('hidden');
+
+    // Reset popularity checkboxes
+    const secretIdCheck = document.getElementById('secretIdCheck');
+    const mutantAssocCheck = document.getElementById('mutantAssocCheck');
+    const unpopularCheck = document.getElementById('unpopularCheck');
+    if (secretIdCheck) secretIdCheck.checked = false;
+    if (mutantAssocCheck) mutantAssocCheck.checked = false;
+    if (unpopularCheck) unpopularCheck.checked = false;
+    document.getElementById('popularityControls').classList.add('hidden');
 
     // Reset step 3 resource controls
     document.getElementById('normalResourceControls').classList.remove('hidden');
@@ -289,6 +314,20 @@ function migrateCharacterFormat() {
         currentCharacter.secondaryAbilities.baseResources = currentCharacter.secondaryAbilities.resources
             ? { ...currentCharacter.secondaryAbilities.resources }
             : null;
+    }
+
+    // Migrate popularity from old number format to new object format
+    if (currentCharacter.secondaryAbilities &&
+        typeof currentCharacter.secondaryAbilities.popularity === 'number') {
+        const oldPop = currentCharacter.secondaryAbilities.popularity;
+        currentCharacter.secondaryAbilities.popularity = {
+            base: oldPop,
+            hasSecretId: false,
+            hangsWithMutants: false,
+            generallyUnpopular: false,
+            heroPopularity: oldPop,
+            secretPopularity: null
+        };
     }
 
     // Ensure legacy arrays exist for backward compatibility

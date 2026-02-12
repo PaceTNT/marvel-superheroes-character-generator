@@ -833,7 +833,7 @@ function generateCharacterSheet() {
         ${currentCharacter.backstory ? `<h4>Backstory</h4><p>${currentCharacter.backstory}</p>` : ''}
 
         ${currentCharacter.powerDetails.list.length ? `
-            <div class="sheet-section-details">
+            <div class="sheet-section-details sheet-power-details">
                 <h4>Power Details</h4>
                 ${currentCharacter.powerDetails.list.map(p => {
                     const details = typeof POWER_DETAILS_DATA !== 'undefined' ? POWER_DETAILS_DATA[p.name] : null;
@@ -845,7 +845,7 @@ function generateCharacterSheet() {
             </div>` : ''}
 
         ${currentCharacter.talentDetails.list.length ? `
-            <div class="sheet-section-details">
+            <div class="sheet-section-details sheet-talent-details">
                 <h4>Talent Details</h4>
                 ${currentCharacter.talentDetails.list.map(t => {
                     const tDetails = typeof TALENT_DETAILS_DATA !== 'undefined' ? TALENT_DETAILS_DATA[t.name] : null;

@@ -1161,6 +1161,11 @@ header h2 {
         font-size: 0.95em;
     }
 
+    .sheet-power-details,
+    .sheet-talent-details {
+        display: block;
+    }
+
     .sheet-section-details {
         break-before: page;
     }
@@ -1171,6 +1176,14 @@ header h2 {
 
     .power-detail-table {
         font-size: 0.85em;
+    }
+}
+
+/* Hide power/talent details on screen (shown only when printing) */
+@media screen {
+    .sheet-power-details,
+    .sheet-talent-details {
+        display: none;
     }
 }
 

@@ -91,7 +91,7 @@ const POWERS_DATA = {
       { name: "Lightning Speed", starred: false, bonus: null },
       { name: "Teleportation", starred: true, bonus: null }, // Costs 2 slots
       { name: "Levitation", starred: false, bonus: null },
-      { name: "Swimming", starred: false, bonus: null },
+      { name: "Swimming", starred: false, bonus: "Water Breathing" },
       { name: "Climbing", starred: false, bonus: null },
       { name: "Digging", starred: false, bonus: "Claws" },
       { name: "Dimensional Travel", starred: false, bonus: null }
@@ -107,7 +107,6 @@ const POWERS_DATA = {
       { name: "Water Control", starred: false, bonus: null },
       { name: "Water Control", starred: false, bonus: null }, // Listed twice (rolls 7-8)
       { name: "Weather Control", starred: false, bonus: null },
-      { name: "Animate Objects", starred: false, bonus: null },
       { name: "Density Manipulation - Others", starred: false, bonus: null },
       { name: "Body Transformation - Others", starred: false, bonus: null },
       { name: "Animal Transformation - Others", starred: false, bonus: null }
@@ -120,8 +119,8 @@ const POWERS_DATA = {
       { name: "Electrical Manipulation", starred: false, bonus: null }, // Listed twice (rolls 3-4)
       { name: "Light Manipulation", starred: false, bonus: null },
       { name: "Light Manipulation", starred: false, bonus: null }, // Listed twice (rolls 5-6)
-      { name: "Sound Manipulation", starred: false, bonus: null },
-      { name: "Sound Manipulation", starred: false, bonus: null }, // Listed twice (rolls 7-8)
+      { name: "Sound Manipulation", starred: false, bonus: "Sound Generation" },
+      { name: "Sound Manipulation", starred: false, bonus: "Sound Generation" }, // Listed twice (rolls 7-8)
       { name: "Darkforce Manipulation", starred: false, bonus: null },
       { name: "Gravity Manipulation", starred: false, bonus: null },
       { name: "Probability Manipulation", starred: true, bonus: null }, // Costs 2 slots
@@ -136,11 +135,11 @@ const POWERS_DATA = {
       { name: "Density Manipulation - Self", starred: false, bonus: null },
       { name: "Phasing", starred: false, bonus: null },
       { name: "Invisibility", starred: false, bonus: null },
-      { name: "Plasticity", starred: false, bonus: null },
+      { name: "Plasticity", starred: false, bonus: "Elongation" },
       { name: "Elongation", starred: false, bonus: null },
       { name: "Shape-Shifting", starred: false, bonus: null },
       { name: "Imitation", starred: false, bonus: null },
-      { name: "Body Transformation - Self", starred: false, bonus: null },
+      { name: "Body Transformation - Self", starred: true, bonus: null },
       { name: "Animal Transformation - Self", starred: false, bonus: null },
       { name: "Raise Lowest Ability", starred: false, bonus: null },
       { name: "Blending", starred: false, bonus: null },
@@ -163,54 +162,54 @@ const POWERS_DATA = {
     ],
 
     "Mental Powers": [
-      { name: "Ultimate Skill", starred: false, bonus: null },
       { name: "Telepathy", starred: false, bonus: null },
       { name: "Image Generation", starred: false, bonus: null },
       { name: "Telekinesis", starred: false, bonus: null },
-      { name: "Mind Control", starred: false, bonus: null },
-      { name: "Emotion Control", starred: false, bonus: null },
-      { name: "Mental Probe", starred: false, bonus: null },
+      { name: "Mind Control", starred: true, bonus: null },
+      { name: "Emotion Control", starred: true, bonus: null },
       { name: "Force Field Generation", starred: false, bonus: null },
       { name: "Animal Communication and Control", starred: false, bonus: null },
       { name: "Mechanical Intuition", starred: false, bonus: null },
-      { name: "Empathy", starred: false, bonus: null },
       { name: "Animal Empathy", starred: false, bonus: null },
+      { name: "Empathy", starred: false, bonus: null },
       { name: "Psi-Screen", starred: false, bonus: null },
+      { name: "Mental Probe", starred: false, bonus: null },
       { name: "Animate Drawings", starred: false, bonus: null },
-      { name: "Possession", starred: false, bonus: null },
-      { name: "Transferral", starred: false, bonus: null },
+      { name: "Possession", starred: true, bonus: null },
+      { name: "Transferral", starred: true, bonus: null },
       { name: "Astral Projection", starred: false, bonus: null },
       { name: "Psionic Attack", starred: false, bonus: null },
-      { name: "Precognition", starred: false, bonus: null },
+      { name: "Precognition", starred: true, bonus: null },
       { name: "Postcognition", starred: false, bonus: null },
-      { name: "Plant Control", starred: false, bonus: null }
+      { name: "Plant Control", starred: false, bonus: null },
+      { name: "Ultimate Skill", starred: false, bonus: null }
     ],
 
     "Body Alterations / Offensive": [
       { name: "Extra Body Parts - Offensive", starred: false, bonus: null },
+      { name: "Extra Body Parts - Offensive", starred: false, bonus: null },
+      { name: "Extra Body Parts - Offensive", starred: false, bonus: null },
       { name: "Extra Attacks", starred: false, bonus: null },
-      { name: "Natural Weaponry", starred: false, bonus: null },
+      { name: "Energy Touch", starred: false, bonus: "Resistance to Electricity" },
+      { name: "Paralyzing Touch", starred: false, bonus: null },
       { name: "Claws", starred: false, bonus: null },
-      { name: "Fangs/Teeth", starred: false, bonus: null },
-      { name: "Horns", starred: false, bonus: null },
-      { name: "Quills/Spines", starred: false, bonus: null },
-      { name: "Poison Touch", starred: false, bonus: null },
-      { name: "Paralysis Touch", starred: false, bonus: null },
+      { name: "Claws", starred: false, bonus: null },
       { name: "Rotting Touch", starred: false, bonus: null },
       { name: "Corrosive Touch", starred: false, bonus: null },
-      { name: "Vampirism", starred: false, bonus: null },
       { name: "Health-Drain Touch", starred: false, bonus: null },
-      { name: "Blinding Touch", starred: false, bonus: null },
-      { name: "Energy Touch", starred: false, bonus: "Resistance to Electricity" }
+      { name: "Blinding Touch", starred: false, bonus: null }
     ],
 
     "Body Alterations / Defensive": [
       { name: "Body Armor", starred: false, bonus: null },
+      { name: "Body Armor", starred: false, bonus: null },
+      { name: "Body Armor", starred: false, bonus: null },            
       { name: "Water Breathing", starred: false, bonus: null },
       { name: "Absorption Power", starred: false, bonus: null },
       { name: "Regeneration", starred: false, bonus: null },
       { name: "Solar Regeneration", starred: false, bonus: null },
       { name: "Recovery", starred: false, bonus: "Any Resistance" },
+      { name: "Recovery", starred: false, bonus: "Any Resistance" },      
       { name: "Life Support", starred: false, bonus: null },
       { name: "Pheromones", starred: false, bonus: null },
       { name: "Damage Transfer", starred: false, bonus: null },

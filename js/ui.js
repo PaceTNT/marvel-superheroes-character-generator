@@ -656,12 +656,29 @@ function updateSummary() {
         }
     }
 
+    // Battlesuit bonuses
+    if (currentCharacter.battlesuit) {
+        html += '<h4>Battle-Suit</h4>';
+        html += '<p style="font-size: 0.85em; color: var(--primary-color, #0066cc);">FASE bonuses from suit:</p>';
+        html += '<ul style="font-size: 0.85em;">';
+        const abilityLabels = { fighting: 'F', agility: 'A', strength: 'S', endurance: 'E' };
+        for (const [ability, label] of Object.entries(abilityLabels)) {
+            const mod = currentCharacter.battlesuit.modifiers[ability];
+            if (mod.modifier !== 0) {
+                const sign = mod.modifier > 0 ? '+' : '';
+                html += `<li><strong>${label}:</strong> ${sign}${mod.modifier} rank(s)</li>`;
+            }
+        }
+        html += '</ul>';
+    }
+
     // Powers
     if (currentCharacter.powerDetails && currentCharacter.powerDetails.list.length > 0) {
         html += '<h4>Powers</h4>';
         html += '<ul style="font-size: 0.9em;">';
         currentCharacter.powerDetails.list.forEach(power => {
-            html += `<li>${power.name}${power.starred ? ' ⭐⭐' : ''} - ${power.rank}</li>`;
+            const suitTag = currentCharacter.battlesuit ? ' [Suit]' : '';
+            html += `<li>${power.name}${power.starred ? ' ⭐⭐' : ''} - ${power.rank}${suitTag}</li>`;
         });
         html += '</ul>';
     }
@@ -731,6 +748,20 @@ function generateCharacterSheet() {
             }
             return p;
         })()}</p>
+
+        ${currentCharacter.battlesuit ? `<h4>Battle-Suit</h4>
+            <p>All powers are combined into an artificial battle-suit.</p>
+            <table class="power-detail-table">
+                <thead><tr><th>Ability</th><th>Roll</th><th>Modifier</th><th>Before Suit</th><th>With Suit</th></tr></thead>
+                <tbody>
+                ${['fighting', 'agility', 'strength', 'endurance'].map(a => {
+                    const mod = currentCharacter.battlesuit.modifiers[a];
+                    const orig = currentCharacter.battlesuit.originalAbilities[a];
+                    const curr = currentCharacter.primaryAbilities[a];
+                    return `<tr><td>${a.charAt(0).toUpperCase() + a.slice(1)}</td><td>${mod.roll}</td><td>${mod.description}</td><td>${orig.rank} (${orig.value})</td><td>${curr.rank} (${curr.value})</td></tr>`;
+                }).join('')}
+                </tbody>
+            </table>` : ''}
 
         ${currentCharacter.powerDetails.list.length ? `<h4>Powers</h4>${currentCharacter.powerDetails.list.map(p => {
             const details = typeof POWER_DETAILS_DATA !== 'undefined' ? POWER_DETAILS_DATA[p.name] : null;
@@ -811,6 +842,11 @@ function handleRollAllocation() {
     currentCharacter.powerDetails.purchased = 0;
     currentCharacter.powerDetails.current = 0;
     currentCharacter.powerDetails.list = []; // Clear existing powers
+
+    // Revert battlesuit if active (powers are being cleared)
+    if (currentCharacter.battlesuit) {
+        revertBattlesuit();
+    }
 
     currentCharacter.talentDetails.roll = result.roll;
     currentCharacter.talentDetails.initial = result.talents.initial;
@@ -1135,13 +1171,29 @@ function addPowerToCharacter(power) {
     updatePowerSlotsDisplay();
     updateSummary();
     saveCharacterToLocalStorage();
+
+    // Check for Hi-Tech + Body Armor => offer battlesuit
+    if (power.name === 'Body Armor' && currentCharacter.origin === 'Hi-Tech' && !currentCharacter.battlesuit) {
+        showBattlesuitPrompt();
+    }
 }
 
 /**
  * Remove a power from the character
  */
 function removePowerFromCharacter(index) {
-    showConfirmModal('Remove this power?', 'Remove Power', () => {
+    const power = currentCharacter.powerDetails.list[index];
+    const isBattlesuitArmor = power && power.name === 'Body Armor' && currentCharacter.battlesuit;
+    const confirmMsg = isBattlesuitArmor
+        ? 'Remove Body Armor? This will also remove your battle-suit and revert FASE bonuses.'
+        : 'Remove this power?';
+
+    showConfirmModal(confirmMsg, 'Remove Power', () => {
+        // Revert battlesuit if removing Body Armor
+        if (isBattlesuitArmor) {
+            revertBattlesuit();
+        }
+
         currentCharacter.powerDetails.list.splice(index, 1);
 
         // Update current slot count
@@ -1167,14 +1219,19 @@ function renderPowersList() {
         return;
     }
 
+    const hasBattlesuit = !!currentCharacter.battlesuit;
+
     let html = '';
     currentCharacter.powerDetails.list.forEach((power, index) => {
         const starredIndicator = power.starred ? ' <span class="power-starred">⭐⭐</span>' : '';
         const escapedName = power.name.replace(/'/g, "\\'");
+        const battlesuitTag = (hasBattlesuit && power.name === 'Body Armor')
+            ? ' <span class="battlesuit-tag">BATTLE-SUIT</span>'
+            : (hasBattlesuit ? ' <span class="battlesuit-equipped-tag">[In Suit]</span>' : '');
         html += `
-            <div class="power-card">
+            <div class="power-card${hasBattlesuit && power.name === 'Body Armor' ? ' battlesuit-card' : ''}">
                 <div class="power-info">
-                    <div class="power-name">${power.name}${starredIndicator}</div>
+                    <div class="power-name">${power.name}${starredIndicator}${battlesuitTag}</div>
                     <div class="power-details">
                         Category: ${power.category} |
                         Rank: ${power.rank} (${power.value})
@@ -1878,4 +1935,195 @@ function renderContactDetailsHTML(contact) {
     }
 
     return html;
+}
+
+// ===== BATTLESUIT FUNCTIONS (Hi-Tech + Body Armor) =====
+
+/**
+ * Show the battlesuit prompt modal for Hi-Tech heroes who gain Body Armor.
+ */
+function showBattlesuitPrompt() {
+    const modal = document.getElementById('battlesuitModal');
+    const body = document.getElementById('battlesuitModalBody');
+    const yesBtn = document.getElementById('battlesuitModalYes');
+    const noBtn = document.getElementById('battlesuitModalNo');
+    const closeBtn = document.getElementById('battlesuitModalClose');
+
+    document.getElementById('battlesuitModalTitle').textContent = 'Battle-Suit Option';
+
+    body.innerHTML = `
+        <div class="power-detail-section">
+            <p>As a <strong>Hi-Tech</strong> hero with <strong>Body Armor</strong>, you may choose to combine all your powers into a <strong>battle-suit</strong> (a la Iron Man).</p>
+            <p>All of your other Powers will be included in the suit, and the suit is considered <em>artificial</em> Body Armor.</p>
+            <p>You will roll on the <strong>Ability Modifier Table</strong> for each physical ability (Fighting, Agility, Strength, Endurance) to determine potential bonuses when wearing the suit.</p>
+        </div>
+    `;
+
+    yesBtn.classList.remove('hidden');
+    noBtn.classList.remove('hidden');
+    closeBtn.classList.add('hidden');
+
+    // Remove old listeners by cloning
+    const newYes = yesBtn.cloneNode(true);
+    const newNo = noBtn.cloneNode(true);
+    yesBtn.parentNode.replaceChild(newYes, yesBtn);
+    noBtn.parentNode.replaceChild(newNo, noBtn);
+
+    newYes.addEventListener('click', () => {
+        applyBattlesuit();
+    });
+
+    newNo.addEventListener('click', () => {
+        modal.classList.remove('active');
+    });
+
+    modal.classList.add('active');
+}
+
+/**
+ * Roll FASE bonuses on the Ability Modifier Table and apply them.
+ * Stores original abilities so they can be reverted if Body Armor is removed.
+ */
+function applyBattlesuit() {
+    const faseAbilities = ['fighting', 'agility', 'strength', 'endurance'];
+
+    // Store original FASE values before battlesuit
+    const originalAbilities = {};
+    faseAbilities.forEach(ability => {
+        originalAbilities[ability] = {
+            rank: currentCharacter.primaryAbilities[ability].rank,
+            value: currentCharacter.primaryAbilities[ability].value
+        };
+    });
+
+    // Roll on Ability Modifier Table for each FASE ability
+    const modifiers = {};
+    faseAbilities.forEach(ability => {
+        const roll = rollD100();
+        const entry = getAbilityModifier(roll);
+        modifiers[ability] = {
+            roll: roll,
+            modifier: entry.modifier,
+            description: entry.description
+        };
+
+        // Apply the modifier
+        if (entry.modifier !== 0) {
+            const newRank = applyRankModifier(currentCharacter.primaryAbilities[ability].rank, entry.modifier);
+            currentCharacter.primaryAbilities[ability].rank = newRank;
+            currentCharacter.primaryAbilities[ability].value = getRankValue(newRank);
+        }
+    });
+
+    // Store battlesuit data
+    currentCharacter.battlesuit = {
+        modifiers: modifiers,
+        originalAbilities: originalAbilities
+    };
+
+    // Recalculate Health since FASE changed
+    updateSecondaryAbilities();
+
+    // Show results in the modal
+    showBattlesuitResults(modifiers, originalAbilities);
+
+    // Update all displays
+    updateAbilitiesTable();
+    renderPowersList();
+    updateSummary();
+    saveCharacterToLocalStorage();
+}
+
+/**
+ * Show the battlesuit roll results in the modal.
+ */
+function showBattlesuitResults(modifiers, originalAbilities) {
+    const body = document.getElementById('battlesuitModalBody');
+    const yesBtn = document.getElementById('battlesuitModalYes');
+    const noBtn = document.getElementById('battlesuitModalNo');
+    const closeBtn = document.getElementById('battlesuitModalClose');
+
+    document.getElementById('battlesuitModalTitle').textContent = 'Battle-Suit Created!';
+
+    // Hide yes/no, show close
+    yesBtn.classList.add('hidden');
+    noBtn.classList.add('hidden');
+    closeBtn.classList.remove('hidden');
+
+    const abilityLabels = {
+        fighting: 'Fighting (F)',
+        agility: 'Agility (A)',
+        strength: 'Strength (S)',
+        endurance: 'Endurance (E)'
+    };
+
+    let html = '<div class="power-detail-section"><p>Your battle-suit has been created! Here are the FASE ability modifiers:</p></div>';
+    html += '<table class="power-detail-table"><thead><tr><th>Ability</th><th>Roll</th><th>Modifier</th><th>Before</th><th>After</th></tr></thead><tbody>';
+
+    for (const ability of ['fighting', 'agility', 'strength', 'endurance']) {
+        const mod = modifiers[ability];
+        const origRank = originalAbilities[ability].rank;
+        const newRank = currentCharacter.primaryAbilities[ability].rank;
+        const newValue = currentCharacter.primaryAbilities[ability].value;
+        const changed = origRank !== newRank;
+        const highlight = changed ? ' style="font-weight: bold; color: var(--success-color, #28a745);"' : '';
+
+        html += `<tr>
+            <td>${abilityLabels[ability]}</td>
+            <td>${mod.roll}</td>
+            <td>${mod.description}</td>
+            <td>${origRank} (${originalAbilities[ability].value})</td>
+            <td${highlight}>${newRank} (${newValue})</td>
+        </tr>`;
+    }
+
+    html += '</tbody></table>';
+    html += '<div class="power-detail-section power-detail-notes"><strong>Note:</strong> All powers are now part of the suit (artificial, equipment-based). Removing Body Armor will revert these bonuses.</div>';
+
+    body.innerHTML = html;
+
+    // Wire up close button
+    const newClose = closeBtn.cloneNode(true);
+    closeBtn.parentNode.replaceChild(newClose, closeBtn);
+    newClose.addEventListener('click', () => {
+        document.getElementById('battlesuitModal').classList.remove('active');
+    });
+}
+
+/**
+ * Revert battlesuit FASE bonuses when Body Armor is removed.
+ */
+function revertBattlesuit() {
+    if (!currentCharacter.battlesuit) return;
+
+    const originalAbilities = currentCharacter.battlesuit.originalAbilities;
+    for (const ability of ['fighting', 'agility', 'strength', 'endurance']) {
+        if (originalAbilities[ability]) {
+            currentCharacter.primaryAbilities[ability].rank = originalAbilities[ability].rank;
+            currentCharacter.primaryAbilities[ability].value = originalAbilities[ability].value;
+        }
+    }
+
+    currentCharacter.battlesuit = null;
+
+    // Recalculate Health
+    updateSecondaryAbilities();
+    updateAbilitiesTable();
+}
+
+/**
+ * Update the abilities table display to reflect current values.
+ * Used after battlesuit application/reversion.
+ */
+function updateAbilitiesTable() {
+    const abilities = ['fighting', 'agility', 'strength', 'endurance', 'reason', 'intuition', 'psyche'];
+    abilities.forEach(ability => {
+        const data = currentCharacter.primaryAbilities[ability];
+        if (!data) return;
+        const row = document.querySelector(`tr[data-ability="${ability}"]`);
+        if (row) {
+            row.querySelector('.rank-result').textContent = data.rank;
+            row.querySelector('.value-result').textContent = data.value;
+        }
+    });
 }

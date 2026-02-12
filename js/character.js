@@ -49,6 +49,8 @@ let currentCharacter = {
         purchased: 0,         // Additional slots purchased with Resources
         list: []              // Array of contact strings (free-form)
     },
+    // Battlesuit (Hi-Tech + Body Armor only)
+    battlesuit: null, // null = not applicable, or { modifiers: { fighting, agility, strength, endurance }, originalAbilities: { ... } }
     // Legacy arrays (kept for backward compatibility)
     powers: [],
     talents: [],
@@ -141,6 +143,7 @@ function resetCharacter() {
             purchased: 0,
             list: []
         },
+        battlesuit: null,
         powers: [],
         talents: [],
         contacts: [],
@@ -328,6 +331,11 @@ function migrateCharacterFormat() {
             heroPopularity: oldPop,
             secretPopularity: null
         };
+    }
+
+    // Ensure battlesuit field exists
+    if (currentCharacter.battlesuit === undefined) {
+        currentCharacter.battlesuit = null;
     }
 
     // Ensure legacy arrays exist for backward compatibility

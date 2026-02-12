@@ -44,6 +44,24 @@ function initializeEventListeners() {
         currentCharacter.backstory = e.target.value;
     });
 
+    // Image prompt options
+    document.getElementById('genderAppearance')?.addEventListener('change', (e) => {
+        currentCharacter.genderAppearance = e.target.value;
+        saveCharacterToLocalStorage();
+    });
+
+    document.getElementById('primarySuitColor')?.addEventListener('input', (e) => {
+        currentCharacter.primarySuitColor = e.target.value;
+        document.getElementById('primaryColorLabel').textContent = e.target.value;
+        saveCharacterToLocalStorage();
+    });
+
+    document.getElementById('secondarySuitColor')?.addEventListener('input', (e) => {
+        currentCharacter.secondarySuitColor = e.target.value;
+        document.getElementById('secondaryColorLabel').textContent = e.target.value;
+        saveCharacterToLocalStorage();
+    });
+
     // Powers, Talents, Contacts
     document.getElementById('rollAllocation')?.addEventListener('click', handleRollAllocation);
     document.getElementById('rollRandomPower')?.addEventListener('click', handleRollRandomPower);
@@ -716,6 +734,11 @@ function generateCharacterSheet() {
     // Equipment (still free-form)
     currentCharacter.equipment = document.getElementById('equipmentInput').value.split('\n').filter(e => e.trim());
 
+    // Image prompt options
+    currentCharacter.genderAppearance = document.getElementById('genderAppearance').value;
+    currentCharacter.primarySuitColor = document.getElementById('primarySuitColor').value;
+    currentCharacter.secondarySuitColor = document.getElementById('secondarySuitColor').value;
+
     // Powers, talents, contacts are already tracked in their Details objects
 
     // Show final summary
@@ -791,6 +814,11 @@ function generateCharacterSheet() {
 
     document.getElementById('characterSummary').innerHTML = html;
     document.getElementById('exportButtons').classList.remove('hidden');
+
+    // Generate and display the image prompt
+    const imagePrompt = generateImagePrompt();
+    document.getElementById('imagePromptOutput').value = imagePrompt;
+    document.getElementById('imagePromptSection').classList.remove('hidden');
 
     saveCharacterToLocalStorage();
 }
@@ -2125,5 +2153,428 @@ function updateAbilitiesTable() {
             row.querySelector('.rank-result').textContent = data.rank;
             row.querySelector('.value-result').textContent = data.value;
         }
+    });
+}
+
+// ===== Image Generation Prompt Functions =====
+
+function generateImagePrompt() {
+    const char = currentCharacter;
+
+    // Randomly select art style
+    const artStyles = [
+        {
+            era: "1960s",
+            description: "classic 1960s Marvel Comics style, bold ink lines, Ben-Day dots, four-color printing aesthetic, dramatic inspired poses and perspectives, thick black outlines"
+        },
+        {
+            era: "1980s",
+            description: "1980s Marvel Comics style, detailed cross-hatching, dynamic anatomy, rich color palette, and cinematic compositions"
+        },
+        {
+            era: "1990s",
+            description: "1990s Marvel Comics style, extreme musculature, hyper-detailed rendering, heavy shadows and dramatic lighting, dynamic splash-page composition"
+        }
+    ];
+    const selectedStyle = artStyles[Math.floor(Math.random() * artStyles.length)];
+
+    // Map gender appearance to visual description
+    const genderDescriptions = {
+        "Androgynous": "an androgynous figure",
+        "Masculine": "a male figure",
+        "Feminine": "a female figure"
+    };
+    const genderDesc = genderDescriptions[char.genderAppearance || "Androgynous"];
+
+    // Convert hex colors to descriptive color names
+    const primaryColorName = hexToColorName(char.primarySuitColor || "#ED1D24");
+    const secondaryColorName = hexToColorName(char.secondarySuitColor || "#1E3A5F");
+
+    // Build physique description from FASERIP ranks
+    const physiqueDesc = buildPhysiqueDescription(char.primaryAbilities);
+
+    // Build powers visual description
+    const powersDesc = buildPowersVisualDescription(
+        char.powerDetails ? char.powerDetails.list : []
+    );
+
+    // Build origin flavor
+    const originFlavor = buildOriginFlavor(char.origin, char.battlesuit);
+
+    // Randomly select bad guys and setting
+    const encounter = selectRandomEncounter();
+
+    // Build the character name reference
+    const heroName = char.name || "an unnamed superhero";
+
+    // Assemble the full prompt
+    const parts = [
+        `A ${selectedStyle.description}.`,
+        ``,
+        `The image depicts ${heroName}, ${genderDesc}.`,
+        physiqueDesc,
+        originFlavor,
+        ``,
+        `The hero wears a skintight super-suit with ${primaryColorName} as the primary color and ${secondaryColorName} as the secondary color, with a distinctive emblem on the chest.`,
+    ];
+
+    if (powersDesc) {
+        parts.push(``);
+        parts.push(`The hero is visibly manifesting their powers: ${powersDesc}.`);
+    }
+
+    parts.push(``);
+    parts.push(`${heroName} is in the middle of an intense battle against ${encounter.enemies} in ${encounter.setting}. ${encounter.actionDetail}`);
+    parts.push(``);
+    parts.push(`The composition is dynamic and action-packed, with dramatic perspective and motion lines. The hero is the clear focal point of the image.`);
+
+    return parts.join('\n').trim();
+}
+
+function hexToColorName(hex) {
+    const r = parseInt(hex.slice(1, 3), 16) / 255;
+    const g = parseInt(hex.slice(3, 5), 16) / 255;
+    const b = parseInt(hex.slice(5, 7), 16) / 255;
+
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const l = (max + min) / 2;
+    const d = max - min;
+    const s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+
+    let h = 0;
+    if (d !== 0) {
+        if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) * 60;
+        else if (max === g) h = ((b - r) / d + 2) * 60;
+        else h = ((r - g) / d + 4) * 60;
+    }
+
+    // Near-achromatic colors
+    if (s < 0.1) {
+        if (l < 0.15) return "black";
+        if (l < 0.35) return "dark charcoal gray";
+        if (l < 0.65) return "medium gray";
+        if (l < 0.85) return "light silver gray";
+        return "white";
+    }
+
+    // Determine lightness qualifier
+    let lightQual = "";
+    if (l < 0.25) lightQual = "dark ";
+    else if (l < 0.4) lightQual = "deep ";
+    else if (l > 0.75) lightQual = "light ";
+    else if (l > 0.6) lightQual = "bright ";
+
+    // Map hue to color name
+    let hueName;
+    if (h < 15) hueName = "red";
+    else if (h < 35) hueName = "orange";
+    else if (h < 50) hueName = "golden yellow";
+    else if (h < 70) hueName = "yellow";
+    else if (h < 85) hueName = "yellow-green";
+    else if (h < 150) hueName = "green";
+    else if (h < 175) hueName = "teal";
+    else if (h < 200) hueName = "cyan";
+    else if (h < 240) hueName = "blue";
+    else if (h < 270) hueName = "indigo";
+    else if (h < 300) hueName = "purple";
+    else if (h < 335) hueName = "magenta";
+    else hueName = "red";
+
+    return lightQual + hueName;
+}
+
+function buildPhysiqueDescription(abilities) {
+    const parts = [];
+
+    // Strength determines visible musculature
+    // Typical or lower = not muscular, Good to Remarkable = lean and muscular, Incredible+ = very muscular
+    const strengthDescMap = {
+        "Feeble": "a thin, frail frame",
+        "Poor": "a slim, wiry build",
+        "Typical": "an average build with no notable muscularity",
+        "Good": "a lean, muscular build",
+        "Excellent": "a lean, muscular build with sharp definition",
+        "Remarkable": "a lean, muscular build with impressive definition and powerful proportions",
+        "Incredible": "a very muscular physique with superhuman proportions",
+        "Amazing": "a very muscular, massively powerful frame with impossibly large muscles",
+        "Monstrous": "a very muscular, titan-like physique of staggering inhuman proportions"
+    };
+    const strengthRank = abilities.strength ? abilities.strength.rank : "Typical";
+    parts.push(`They have ${strengthDescMap[strengthRank] || "an average build"}`);
+
+    // Agility determines how they carry themselves
+    const agilityRank = abilities.agility ? abilities.agility.rank : "Typical";
+    const agilityIndex = RANKS_DATA.ranks.findIndex(r => r.name === agilityRank);
+    if (agilityIndex >= 5) {
+        parts.push("and move with extraordinary grace and acrobatic fluidity");
+    } else if (agilityIndex >= 3) {
+        parts.push("and carry themselves with nimble confidence");
+    }
+
+    // Fighting determines battle-readiness in posture
+    const fightingRank = abilities.fighting ? abilities.fighting.rank : "Typical";
+    const fightingIndex = RANKS_DATA.ranks.findIndex(r => r.name === fightingRank);
+    if (fightingIndex >= 5) {
+        parts.push("Their fighting stance radiates mastery and lethal precision");
+    } else if (fightingIndex >= 3) {
+        parts.push("Their stance shows trained combat readiness");
+    }
+
+    // Psyche determines eye intensity
+    const psycheRank = abilities.psyche ? abilities.psyche.rank : "Typical";
+    const psycheIndex = RANKS_DATA.ranks.findIndex(r => r.name === psycheRank);
+    if (psycheIndex >= 6) {
+        parts.push("Their eyes burn with overwhelming psychic intensity");
+    } else if (psycheIndex >= 4) {
+        parts.push("Their gaze carries an aura of powerful willpower");
+    }
+
+    // Reason determines intellectual expression
+    const reasonRank = abilities.reason ? abilities.reason.rank : "Typical";
+    const reasonIndex = RANKS_DATA.ranks.findIndex(r => r.name === reasonRank);
+    if (reasonIndex >= 6) {
+        parts.push("A visibly calculating, genius intellect shows behind their expression");
+    }
+
+    // Intuition determines awareness expression
+    const intuitionRank = abilities.intuition ? abilities.intuition.rank : "Typical";
+    const intuitionIndex = RANKS_DATA.ranks.findIndex(r => r.name === intuitionRank);
+    if (intuitionIndex >= 5) {
+        parts.push("Their expression shows preternatural awareness of their surroundings");
+    }
+
+    // Endurance determines energy/aura
+    const enduranceRank = abilities.endurance ? abilities.endurance.rank : "Typical";
+    const enduranceIndex = RANKS_DATA.ranks.findIndex(r => r.name === enduranceRank);
+    if (enduranceIndex >= 6) {
+        parts.push("An aura of inexhaustible stamina and resilience surrounds them");
+    }
+
+    return parts.join(". ") + ".";
+}
+
+function buildPowersVisualDescription(powersList) {
+    if (!powersList || powersList.length === 0) return "";
+
+    const powerVisualMap = {
+        // Resistances
+        "Resistance to Fire and Heat": "a shimmering heat-proof aura",
+        "Resistance to Cold": "a frosty crystalline barrier on their skin",
+        "Resistance to Electricity": "crackling static discharge harmlessly arcing off their body",
+        "Invulnerability": "an impenetrable golden energy field around their body",
+
+        // Movement
+        "Flight": "soaring through the air with a glowing energy trail",
+        "Gliding": "outstretched wings or membranes catching the wind",
+        "Leaping": "launching through the air with incredible leg power",
+        "Wall-Crawling": "clinging effortlessly to surfaces with glowing fingertips",
+        "Lightning Speed": "a blur of motion with speed lines and afterimages",
+        "Teleportation": "shimmering dimensional rifts opening around them",
+        "Levitation": "floating above the ground with no visible means of support",
+        "Swimming": "sleek aquatic adaptations visible on their body",
+        "Dimensional Travel": "reality warping and dimensional portals swirling nearby",
+
+        // Matter Control
+        "Earth Control": "massive chunks of rock and earth swirling under their command",
+        "Air Control": "powerful whirlwinds and gusts of air surrounding them",
+        "Fire Control": "roaring flames bending to their will",
+        "Water Control": "surging torrents of water coiling around their arms",
+        "Weather Control": "storm clouds, lightning bolts, and howling winds answering their call",
+        "Density Manipulation - Others": "distortion effects warping the density of nearby objects",
+        "Body Transformation - Others": "transmutation energy transforming a nearby target",
+        "Animal Transformation - Others": "mystical energy reshaping a target's form",
+
+        // Energy Control
+        "Magnetic Manipulation": "metallic objects hovering and orbiting around them surrounded by magnetic field lines",
+        "Electrical Manipulation": "arcs of electricity dancing between their hands",
+        "Light Manipulation": "dazzling prismatic light bending and refracting around them",
+        "Sound Manipulation": "visible sonic waves distorting the air",
+        "Darkforce Manipulation": "tendrils of pure darkness extending from their hands",
+        "Gravity Manipulation": "objects floating and warping in a gravity distortion field",
+        "Probability Manipulation": "a subtle reality-warping shimmer around them",
+        "Nullifying Power": "a dampening field visually suppressing nearby energy",
+        "Energy Reflection": "incoming attacks bouncing off a mirror-like energy shield",
+        "Time Control": "temporal distortion effects with frozen motion around them",
+
+        // Body Control
+        "Growth": "towering above normal size with massive proportions",
+        "Shrinking": "diminished to a tiny size but still clearly powerful",
+        "Density Manipulation - Self": "their body shimmering between solid and intangible states",
+        "Phasing": "partially transparent, phasing through solid matter",
+        "Invisibility": "partially fading from visibility with a shimmer effect",
+        "Plasticity": "stretching and morphing their body in impossible ways",
+        "Elongation": "extending their limbs to superhuman lengths",
+        "Shape-Shifting": "their form rippling as they shift between shapes",
+        "Body Transformation - Self": "their body transmuting into another material",
+        "Animal Transformation - Self": "partially transformed into an animal hybrid form",
+        "Blending": "skin and suit shifting color to match the surroundings",
+        "Power Absorption": "draining energy visibly from a nearby opponent",
+
+        // Distance Attacks
+        "Projectile Missile": "launching powerful projectiles from their hands",
+        "Ensnaring Missile": "firing web-like or net-like restraints at enemies",
+        "Ice Generation": "blasting streams of ice and frost from their hands",
+        "Fire Generation": "hurling blasts of intense flame",
+        "Energy Generation": "projecting devastating beams of pure energy from their palms",
+        "Sound Generation": "emitting powerful sonic blasts visible as concentric waves",
+        "Stunning Missile": "firing crackling stun bolts",
+        "Corrosive Missile": "launching sizzling acid projectiles",
+        "Slashing Missile": "hurling razor-sharp energy blades",
+        "Darkforce Generation": "projecting bolts of pure darkness",
+
+        // Mental Powers
+        "Telepathy": "a glowing psychic aura emanating from their temples",
+        "Image Generation": "realistic psychic illusions materializing around them",
+        "Telekinesis": "objects floating and moving under their mental control surrounded by a telekinetic glow",
+        "Mind Control": "hypnotic psychic waves radiating from their eyes",
+        "Emotion Control": "an empathic aura visibly affecting those nearby",
+        "Force Field Generation": "a translucent protective force field bubble around them",
+        "Animal Communication and Control": "wild animals responding to their psychic commands",
+        "Psionic Attack": "devastating psionic energy blasts from their forehead",
+        "Precognition": "ghostly after-images of future events flickering around them",
+        "Astral Projection": "a glowing astral form partially separating from their body",
+        "Plant Control": "vines and vegetation growing and moving at their command",
+
+        // Body Alterations - Offensive
+        "Extra Body Parts - Offensive": "additional powerful limbs or appendages",
+        "Extra Attacks": "striking with blinding speed from multiple angles",
+        "Energy Touch": "hands crackling with destructive energy",
+        "Paralyzing Touch": "hands glowing with paralyzing neural energy",
+        "Claws": "razor-sharp retractable claws extended from their hands",
+        "Rotting Touch": "hands surrounded by a decaying dark miasma",
+        "Corrosive Touch": "hands dripping with luminous corrosive substance",
+        "Health-Drain Touch": "glowing vampiric energy draining from a touched foe",
+
+        // Body Alterations - Defensive
+        "Body Armor": "armored plating or hardened skin visible across their body",
+        "Absorption Power": "visibly absorbing incoming energy attacks into their body",
+        "Regeneration": "wounds rapidly healing with a visible green glow",
+        "Solar Regeneration": "drawing visible energy from sunlight to heal",
+        "Life Support": "a self-sustaining environmental aura around their body",
+        "Pheromones": "a subtle alluring mist surrounding them",
+        "Healing": "radiant golden healing energy flowing from their hands",
+        "Immortality": "a timeless, ethereal quality to their appearance",
+
+        // Bonus powers
+        "Water Breathing": "gills or aquatic breathing apparatus visible on their neck",
+        "Any Resistance": "an energy field protecting against various attacks"
+    };
+
+    const visualParts = [];
+    for (const power of powersList) {
+        const visual = powerVisualMap[power.name];
+        if (visual) {
+            visualParts.push(visual);
+        } else {
+            visualParts.push(`manifesting ${power.name.toLowerCase()}`);
+        }
+    }
+
+    // Limit to 3 most prominent powers to keep prompt focused
+    return visualParts.slice(0, 3).join(", ");
+}
+
+function buildOriginFlavor(origin, battlesuit) {
+    if (battlesuit) {
+        return "They wear a high-tech powered battle-suit with visible mechanical joints, glowing power indicators, and an advanced heads-up display visor.";
+    }
+
+    const originDescriptions = {
+        "Altered Human": "Their body shows subtle signs of superhuman transformation -- an otherworldly glow in their veins, or skin with an unusual sheen, hinting at the accident or experiment that changed them.",
+        "Mutant": "They carry the unmistakable mark of a mutant, with unusual features that set them apart: perhaps unusual eye color, distinctive markings, or a unique physical trait that speaks to their genetic evolution.",
+        "Hi-Tech": "Their costume incorporates visible advanced technology: glowing circuit patterns, micro-servos, and high-tech gadgets integrated into the suit's design.",
+        "Robot": "They are clearly a robotic or android being, with visible mechanical joints, metallic plating, sensor arrays, and glowing optical sensors for eyes.",
+        "Alien": "They have distinctly non-human features marking them as an extraterrestrial being: unusual skin tone, exotic facial structure, and otherworldly physical proportions."
+    };
+
+    return originDescriptions[origin] || "";
+}
+
+function selectRandomEncounter() {
+    const enemies = [
+        {
+            name: "a horde of quasi-futuristic soldiers in yellow hazmat beekeeper suits",
+            actionDetail: "Laser blasts and explosions fill the air as the hero smashes through their ranks."
+        },
+        {
+            name: "a squad of evil masked agents in green uniforms wielding energy weapons",
+            actionDetail: "The evil insignia is visible on their uniforms as the hero tears through their formation."
+        },
+        {
+            name: "a gang of armored mercenaries with heavy weapons",
+            actionDetail: "Bullets ricochet harmlessly as the hero charges into the fray."
+        },
+        {
+            name: "a swarm of robotic drones controlled by a shadowy villain",
+            actionDetail: "Sparking wreckage of destroyed drones litters the ground as the hero fights on."
+        },
+        {
+            name: "a group of superpowered thugs in mismatched costumes",
+            actionDetail: "The villains reel backwards from the hero's devastating counterattack."
+        },
+        {
+            name: "a massive rampaging monster towering over the buildings",
+            actionDetail: "The ground cracks beneath the monster's feet as the hero leaps to confront it."
+        },
+        {
+            name: "an army of silver humanoid robots with metallic faces and energy gauntlets",
+            actionDetail: "Shattered humanoid robot parts scatter through the air from the hero's powerful strikes."
+        },
+        {
+            name: "a cadre of ninja warriors from the Hand, clad in crimson",
+            actionDetail: "The ninjas attack from every angle but the hero counters with devastating skill."
+        },
+        {
+            name: "a team of giant mechs, giant purple-and-pink superhero-hunting robots",
+            actionDetail: "The towering giant robot fires energy beams as the hero dodges and strikes back."
+        },
+        {
+            name: "a horde of symbiote-infected civilians writhing with alien tendrils",
+            actionDetail: "Black symbiote tendrils lash out as the hero fights to free the infected."
+        },
+        {
+            name: "a pack of underground cave monsters pouring out of a crack in the earth",
+            actionDetail: "The subterranean creatures swarm upward but the hero holds the line."
+        },
+        {
+            name: "a group of green-skinned alien infiltrators revealed in their true forms",
+            actionDetail: "The shape-shifting aliens snarl as their disguises fall away under the hero's assault."
+        }
+    ];
+
+    const settings = [
+        "a crumbling city street with overturned cars and shattered storefronts",
+        "the rooftops of Manhattan at sunset, with the skyline glowing behind them",
+        "a high-tech laboratory filled with sparking equipment and shattered glass",
+        "a desolate alien landscape under twin moons and a purple sky",
+        "a massive underground cavern lit by glowing crystals",
+        "the deck of a S.H.I.E.L.D. helicarrier under attack, high above the clouds",
+        "a burning warehouse district at night, with smoke and flames illuminating the scene",
+        "Times Square, with neon signs flickering and civilians fleeing in panic",
+        "the ruins of an ancient temple overgrown with jungle vegetation",
+        "a frozen arctic wasteland with howling winds and cracked ice",
+        "a Stark Industries factory floor with sparking machinery and conveyor belts",
+        "the steps of a grand courthouse, columns cracked and debris everywhere"
+    ];
+
+    const selectedEnemy = enemies[Math.floor(Math.random() * enemies.length)];
+    const selectedSetting = settings[Math.floor(Math.random() * settings.length)];
+
+    return {
+        enemies: selectedEnemy.name,
+        setting: selectedSetting,
+        actionDetail: selectedEnemy.actionDetail
+    };
+}
+
+function copyImagePrompt() {
+    const textarea = document.getElementById('imagePromptOutput');
+    textarea.select();
+    textarea.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(textarea.value).then(() => {
+        const confirmation = document.getElementById('copyConfirmation');
+        confirmation.classList.remove('hidden');
+        setTimeout(() => confirmation.classList.add('hidden'), 2000);
     });
 }

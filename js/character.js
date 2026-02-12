@@ -58,7 +58,10 @@ let currentCharacter = {
     equipment: [],
     name: "",
     realName: "",
-    backstory: ""
+    backstory: "",
+    genderAppearance: "Androgynous",
+    primarySuitColor: "#ED1D24",
+    secondarySuitColor: "#1E3A5F"
 };
 
 let currentStep = 1;
@@ -150,7 +153,10 @@ function resetCharacter() {
         equipment: [],
         name: "",
         realName: "",
-        backstory: ""
+        backstory: "",
+        genderAppearance: "Androgynous",
+        primarySuitColor: "#ED1D24",
+        secondarySuitColor: "#1E3A5F"
     };
 
     currentStep = 1;
@@ -221,6 +227,15 @@ function resetAllUI() {
     document.getElementById('characterName').value = '';
     document.getElementById('realName').value = '';
     document.getElementById('backstory').value = '';
+
+    // Reset image prompt options
+    document.getElementById('genderAppearance').value = 'Androgynous';
+    document.getElementById('primarySuitColor').value = '#ED1D24';
+    document.getElementById('secondarySuitColor').value = '#1E3A5F';
+    document.getElementById('primaryColorLabel').textContent = '#ED1D24';
+    document.getElementById('secondaryColorLabel').textContent = '#1E3A5F';
+    document.getElementById('imagePromptSection').classList.add('hidden');
+    document.getElementById('imagePromptOutput').value = '';
 
     // Reset export buttons and summary
     document.getElementById('exportButtons').classList.add('hidden');
@@ -343,4 +358,9 @@ function migrateCharacterFormat() {
     if (!currentCharacter.talents) currentCharacter.talents = [];
     if (!currentCharacter.contacts) currentCharacter.contacts = [];
     if (!currentCharacter.equipment) currentCharacter.equipment = [];
+
+    // Ensure image prompt fields exist
+    if (!currentCharacter.genderAppearance) currentCharacter.genderAppearance = "Androgynous";
+    if (!currentCharacter.primarySuitColor) currentCharacter.primarySuitColor = "#ED1D24";
+    if (!currentCharacter.secondarySuitColor) currentCharacter.secondarySuitColor = "#1E3A5F";
 }

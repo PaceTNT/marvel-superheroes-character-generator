@@ -298,3 +298,52 @@ function calculatePowerSlots(powers) {
   }
   return slots;
 }
+
+/**
+ * Find which category a power belongs to by name
+ * @param {string} powerName - Name of the power to find
+ * @returns {string|null} - Category name, or null if not found
+ */
+function findCategoryForPower(powerName) {
+  for (const [categoryName, powers] of Object.entries(POWERS_DATA.powersList)) {
+    for (const power of powers) {
+      if (power.name === powerName) {
+        return categoryName;
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Get all detection and sense powers from the Senses category
+ * @returns {array} - Array of power name strings
+ */
+function getDetectionAndSensePowers() {
+  const sensesPowers = POWERS_DATA.powersList["Senses"] || [];
+  // Return unique names only
+  const seen = new Set();
+  return sensesPowers
+    .filter(p => {
+      if (seen.has(p.name)) return false;
+      seen.add(p.name);
+      return true;
+    })
+    .map(p => p.name);
+}
+
+/**
+ * Get all resistance powers from the Resistances category
+ * @returns {array} - Array of power name strings (unique)
+ */
+function getResistancePowers() {
+  const resistances = POWERS_DATA.powersList["Resistances"] || [];
+  const seen = new Set();
+  return resistances
+    .filter(p => {
+      if (seen.has(p.name)) return false;
+      seen.add(p.name);
+      return true;
+    })
+    .map(p => p.name);
+}

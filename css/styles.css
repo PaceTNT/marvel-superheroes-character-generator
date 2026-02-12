@@ -545,6 +545,74 @@ header h2 {
     font-style: italic;
 }
 
+/* Bonus Power Modal Options */
+.bonus-power-options {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.bonus-power-option {
+    padding: 12px 15px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    margin: 8px 0;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: white;
+}
+
+.bonus-power-option:hover {
+    border-color: #ED1D24;
+    background: #fff5f5;
+    transform: translateX(5px);
+}
+
+.bonus-power-option.selected {
+    border-color: #ED1D24;
+    background: #ffebee;
+    box-shadow: 0 0 10px rgba(237, 29, 36, 0.2);
+}
+
+.bonus-power-option-name {
+    font-weight: bold;
+    color: #333;
+    font-size: 1.05em;
+}
+
+.bonus-power-tag {
+    color: #2e7d32;
+    font-size: 0.85em;
+    margin-top: 4px;
+    font-weight: 600;
+}
+
+.bonus-power-notes {
+    color: #666;
+    font-size: 0.85em;
+    margin-top: 3px;
+    font-style: italic;
+}
+
+/* Power subtype and bonus indicators in power list */
+.power-subtype-tag {
+    color: #555;
+    font-weight: normal;
+    font-size: 0.9em;
+}
+
+.bonus-power-indicator {
+    display: inline-block;
+    background: #2e7d32;
+    color: white;
+    font-size: 0.65em;
+    padding: 2px 5px;
+    border-radius: 3px;
+    margin-left: 6px;
+    vertical-align: middle;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
 .power-actions,
 .talent-actions,
 .contact-actions {

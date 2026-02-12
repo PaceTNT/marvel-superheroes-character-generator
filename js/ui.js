@@ -696,7 +696,9 @@ function updateSummary() {
         html += '<ul style="font-size: 0.9em;">';
         currentCharacter.powerDetails.list.forEach(power => {
             const suitTag = currentCharacter.battlesuit ? ' [Suit]' : '';
-            html += `<li>${power.name}${power.starred ? ' ⭐⭐' : ''} - ${power.rank}${suitTag}</li>`;
+            const subtypeText = power.subtype ? ` (${power.subtype})` : '';
+            const bonusText = power.isBonusPower ? ' [Bonus]' : '';
+            html += `<li>${power.name}${subtypeText}${power.starred ? ' ⭐⭐' : ''}${bonusText} - ${power.rank}${suitTag}</li>`;
         });
         html += '</ul>';
     }
@@ -1019,12 +1021,12 @@ function handleRollRandomPower() {
     // Check if this power would exceed the limit
     const slotsNeeded = power.starred ? 2 : 1;
     if (currentCharacter.powerDetails.current + slotsNeeded > effectivePowerLimit) {
-        showAlertModal(`Cannot add this power: it costs ${slotsNeeded} slot(s) but you only have ${currentCharacter.powerDetails.max - currentCharacter.powerDetails.current} slot(s) remaining.`, 'Not Enough Slots');
+        showAlertModal(`Cannot add this power: it costs ${slotsNeeded} slot(s) but you only have ${effectivePowerLimit - currentCharacter.powerDetails.current} slot(s) remaining.`, 'Not Enough Slots');
         return;
     }
 
-    // Add power to character
-    addPowerToCharacter(power);
+    // Add power to character (with bonus power prompts)
+    addPowerWithPrompts(power);
 }
 
 /**
@@ -1113,10 +1115,17 @@ function showPowerSelection(categoryName) {
     powers.forEach((power, index) => {
         const starredText = power.starred ? ' ⭐⭐' : '';
         const costText = power.starred ? '(Costs 2 slots)' : '(Costs 1 slot)';
+        let extraInfo = '';
+        if (power.bonus) {
+            extraInfo = ` | Bonus: ${power.bonus}`;
+        }
+        if (power.name === 'Extra Body Parts - Offensive') {
+            extraInfo = ' | Choose subtype';
+        }
         html += `
             <div class="power-option" data-power-index="${index}">
                 <div class="power-option-name">${power.name}${starredText}</div>
-                <div class="power-option-details">${costText}</div>
+                <div class="power-option-details">${costText}${extraInfo}</div>
             </div>
         `;
     });
@@ -1161,7 +1170,7 @@ function handleModalConfirm() {
         const slotsNeeded = modalState.selectedPower.starred ? 2 : 1;
         const effectivePowerLimit = getEffectiveLimit(currentCharacter.powerDetails);
         if (currentCharacter.powerDetails.current + slotsNeeded > effectivePowerLimit) {
-            showAlertModal(`Cannot add this power: it costs ${slotsNeeded} slot(s) but you only have ${currentCharacter.powerDetails.max - currentCharacter.powerDetails.current} slot(s) remaining.`, 'Not Enough Slots');
+            showAlertModal(`Cannot add this power: it costs ${slotsNeeded} slot(s) but you only have ${effectivePowerLimit - currentCharacter.powerDetails.current} slot(s) remaining.`, 'Not Enough Slots');
             return;
         }
 
@@ -1178,9 +1187,9 @@ function handleModalConfirm() {
             bonus: modalState.selectedPower.bonus
         };
 
-        // Add to character
-        addPowerToCharacter(power);
+        // Add to character (with bonus power prompts)
         closeModal();
+        addPowerWithPrompts(power);
 
     } else if (modalState.mode === 'talent-skill' && modalState.selectedTalent) {
         // Roll rank if the talent is ranked (Column 2)
@@ -1262,6 +1271,344 @@ function addPowerToCharacter(power) {
 }
 
 /**
+ * Add a power to the character with prompts for Extra Body Parts subtypes and bonus powers.
+ * This is the main entry point for adding powers (replaces direct addPowerToCharacter calls).
+ */
+function addPowerWithPrompts(power) {
+    if (power.name === 'Extra Body Parts - Offensive') {
+        // Show subtype selection before adding the power
+        showExtraBodyPartsSelection(power, (selectedSubtype) => {
+            power.subtype = selectedSubtype.name;
+            power.subtypeNotes = selectedSubtype.notes || null;
+            // Set the bonus from the selected subtype
+            power.bonus = selectedSubtype.bonusPower || null;
+            addPowerToCharacter(power);
+            offerBonusPower(power);
+        });
+    } else {
+        addPowerToCharacter(power);
+        offerBonusPower(power);
+    }
+}
+
+/**
+ * Check if a power has a bonus and offer it to the player if slots remain.
+ */
+function offerBonusPower(power) {
+    if (!power.bonus) return;
+
+    const effectiveLimit = getEffectiveLimit(currentCharacter.powerDetails);
+    const slotsRemaining = effectiveLimit - currentCharacter.powerDetails.current;
+    if (slotsRemaining < 1) return;
+
+    if (power.bonus === 'Any Resistance') {
+        showResistanceSelection(power.name, (resistanceName) => {
+            const bonusPower = createBonusPower(resistanceName, 'Resistances');
+            addPowerToCharacter(bonusPower);
+        });
+    } else if (power.bonus === 'Enhanced Senses or any detection Power') {
+        showDetectionPowerSelection(power.name, (powerName) => {
+            const bonusPower = createBonusPower(powerName, 'Senses');
+            addPowerToCharacter(bonusPower);
+        });
+    } else {
+        const bonusCategory = findCategoryForPower(power.bonus) || power.category;
+        showBonusPowerConfirm(power.name, power.bonus, () => {
+            const bonusPower = createBonusPower(power.bonus, bonusCategory);
+            addPowerToCharacter(bonusPower);
+        });
+    }
+}
+
+/**
+ * Create a bonus power object with a rolled rank.
+ */
+function createBonusPower(powerName, category) {
+    const rankResult = rollPowerRank();
+    // Look up if this power is starred
+    const powers = POWERS_DATA.powersList[category] || [];
+    const powerData = powers.find(p => p.name === powerName);
+    const starred = powerData ? powerData.starred : false;
+
+    return {
+        name: powerName,
+        category: category,
+        rank: rankResult.rank,
+        value: rankResult.value,
+        starred: starred,
+        bonus: null,
+        isBonusPower: true
+    };
+}
+
+/**
+ * Show Extra Body Parts subtype selection modal.
+ */
+function showExtraBodyPartsSelection(mainPower, onSelect) {
+    const modal = document.getElementById('bonusPowerModal');
+    const title = document.getElementById('bonusPowerModalTitle');
+    const body = document.getElementById('bonusPowerModalBody');
+    const oldConfirm = document.getElementById('bonusPowerModalConfirm');
+    const oldCancel = document.getElementById('bonusPowerModalCancel');
+
+    title.textContent = 'Extra Body Parts - Choose Type';
+
+    const subtypes = POWER_DETAILS_DATA['Extra Body Parts - Offensive']?.subtypes || [];
+
+    let html = '<div class="power-detail-section">';
+    html += '<p>Choose which type of extra body part your hero has:</p>';
+    html += '</div>';
+    html += '<div class="bonus-power-options">';
+    subtypes.forEach((subtype, index) => {
+        const bonusText = subtype.bonusPower
+            ? `<div class="bonus-power-tag">Bonus: ${subtype.bonusPower}</div>`
+            : '';
+        const notesText = subtype.notes
+            ? `<div class="bonus-power-notes">${subtype.notes}</div>`
+            : '';
+        html += `
+            <div class="bonus-power-option" data-index="${index}">
+                <div class="bonus-power-option-name">${subtype.name}</div>
+                ${bonusText}
+                ${notesText}
+            </div>
+        `;
+    });
+    html += '</div>';
+    body.innerHTML = html;
+
+    // Clone buttons to remove old listeners, then configure
+    const confirmBtn = oldConfirm.cloneNode(true);
+    const cancelBtn = oldCancel.cloneNode(true);
+    oldConfirm.parentNode.replaceChild(confirmBtn, oldConfirm);
+    oldCancel.parentNode.replaceChild(cancelBtn, oldCancel);
+
+    confirmBtn.textContent = 'Select';
+    confirmBtn.classList.add('hidden');
+    cancelBtn.textContent = 'Cancel';
+
+    let selectedIndex = null;
+
+    // Add click handlers for options (using the new confirmBtn reference)
+    body.querySelectorAll('.bonus-power-option').forEach(option => {
+        option.addEventListener('click', () => {
+            body.querySelectorAll('.bonus-power-option').forEach(o => o.classList.remove('selected'));
+            option.classList.add('selected');
+            selectedIndex = parseInt(option.dataset.index);
+            confirmBtn.classList.remove('hidden');
+        });
+    });
+
+    confirmBtn.addEventListener('click', () => {
+        if (selectedIndex !== null) {
+            modal.classList.remove('active');
+            onSelect(subtypes[selectedIndex]);
+        }
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        modal.classList.remove('active');
+        // Still add the power without a subtype
+        mainPower.subtype = null;
+        mainPower.bonus = null;
+        addPowerToCharacter(mainPower);
+    });
+
+    modal.classList.add('active');
+}
+
+/**
+ * Show a confirmation prompt for a standard bonus power (yes/no).
+ */
+function showBonusPowerConfirm(mainPowerName, bonusPowerName, onAccept) {
+    const modal = document.getElementById('bonusPowerModal');
+    const title = document.getElementById('bonusPowerModalTitle');
+    const body = document.getElementById('bonusPowerModalBody');
+    const oldConfirm = document.getElementById('bonusPowerModalConfirm');
+    const oldCancel = document.getElementById('bonusPowerModalCancel');
+
+    title.textContent = 'Bonus Power Available!';
+
+    body.innerHTML = `
+        <div class="power-detail-section">
+            <p><strong>${mainPowerName}</strong> includes a bonus power: <strong>${bonusPowerName}</strong></p>
+            <p>Would you like to add it? This will use 1 additional power slot.</p>
+        </div>
+    `;
+
+    // Clone buttons to remove old listeners, then configure
+    const confirmBtn = oldConfirm.cloneNode(true);
+    const cancelBtn = oldCancel.cloneNode(true);
+    oldConfirm.parentNode.replaceChild(confirmBtn, oldConfirm);
+    oldCancel.parentNode.replaceChild(cancelBtn, oldCancel);
+
+    confirmBtn.textContent = 'Add Bonus Power';
+    confirmBtn.classList.remove('hidden');
+    cancelBtn.textContent = 'No Thanks';
+
+    confirmBtn.addEventListener('click', () => {
+        modal.classList.remove('active');
+        onAccept();
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        modal.classList.remove('active');
+    });
+
+    modal.classList.add('active');
+}
+
+/**
+ * Show resistance selection for "Any Resistance" bonus power.
+ */
+function showResistanceSelection(mainPowerName, onSelect) {
+    const modal = document.getElementById('bonusPowerModal');
+    const title = document.getElementById('bonusPowerModalTitle');
+    const body = document.getElementById('bonusPowerModalBody');
+    const oldConfirm = document.getElementById('bonusPowerModalConfirm');
+    const oldCancel = document.getElementById('bonusPowerModalCancel');
+
+    title.textContent = 'Bonus Power: Choose Resistance';
+
+    const resistances = getResistancePowers();
+    const resistancePowers = POWERS_DATA.powersList["Resistances"] || [];
+
+    let html = '<div class="power-detail-section">';
+    html += `<p><strong>${mainPowerName}</strong> grants a bonus Resistance power. Choose which one (costs 1 power slot):</p>`;
+    html += '</div>';
+    html += '<div class="bonus-power-options">';
+    resistances.forEach((name, index) => {
+        const powerData = resistancePowers.find(p => p.name === name);
+        const costText = powerData && powerData.starred ? ' (2 slots)' : '';
+        html += `
+            <div class="bonus-power-option" data-index="${index}">
+                <div class="bonus-power-option-name">${name}${costText}</div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    body.innerHTML = html;
+
+    // Clone buttons to remove old listeners, then configure
+    const confirmBtn = oldConfirm.cloneNode(true);
+    const cancelBtn = oldCancel.cloneNode(true);
+    oldConfirm.parentNode.replaceChild(confirmBtn, oldConfirm);
+    oldCancel.parentNode.replaceChild(cancelBtn, oldCancel);
+
+    confirmBtn.textContent = 'Add Resistance';
+    confirmBtn.classList.add('hidden');
+    cancelBtn.textContent = 'No Thanks';
+
+    let selectedIndex = null;
+
+    body.querySelectorAll('.bonus-power-option').forEach(option => {
+        option.addEventListener('click', () => {
+            body.querySelectorAll('.bonus-power-option').forEach(o => o.classList.remove('selected'));
+            option.classList.add('selected');
+            selectedIndex = parseInt(option.dataset.index);
+            confirmBtn.classList.remove('hidden');
+        });
+    });
+
+    confirmBtn.addEventListener('click', () => {
+        if (selectedIndex !== null) {
+            const selectedName = resistances[selectedIndex];
+            const powerData = resistancePowers.find(p => p.name === selectedName);
+            const slotsNeeded = powerData && powerData.starred ? 2 : 1;
+            const effectiveLimit = getEffectiveLimit(currentCharacter.powerDetails);
+            const slotsRemaining = effectiveLimit - currentCharacter.powerDetails.current;
+            if (slotsNeeded > slotsRemaining) {
+                showAlertModal(`${selectedName} costs ${slotsNeeded} slot(s) but you only have ${slotsRemaining} remaining.`, 'Not Enough Slots');
+                return;
+            }
+            modal.classList.remove('active');
+            onSelect(selectedName);
+        }
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        modal.classList.remove('active');
+    });
+
+    modal.classList.add('active');
+}
+
+/**
+ * Show detection/sense power selection for "Enhanced Senses or any detection Power" bonus.
+ */
+function showDetectionPowerSelection(mainPowerName, onSelect) {
+    const modal = document.getElementById('bonusPowerModal');
+    const title = document.getElementById('bonusPowerModalTitle');
+    const body = document.getElementById('bonusPowerModalBody');
+    const oldConfirm = document.getElementById('bonusPowerModalConfirm');
+    const oldCancel = document.getElementById('bonusPowerModalCancel');
+
+    title.textContent = 'Bonus Power: Choose Sense/Detection';
+
+    const powers = getDetectionAndSensePowers();
+    const sensesPowers = POWERS_DATA.powersList["Senses"] || [];
+
+    let html = '<div class="power-detail-section">';
+    html += `<p><strong>${mainPowerName}</strong> grants a bonus sense or detection power. Choose which one:</p>`;
+    html += '</div>';
+    html += '<div class="bonus-power-options">';
+    powers.forEach((name, index) => {
+        const powerData = sensesPowers.find(p => p.name === name);
+        const costText = powerData && powerData.starred ? ' (2 slots)' : '';
+        html += `
+            <div class="bonus-power-option" data-index="${index}">
+                <div class="bonus-power-option-name">${name}${costText}</div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    body.innerHTML = html;
+
+    // Clone buttons to remove old listeners, then configure
+    const confirmBtn = oldConfirm.cloneNode(true);
+    const cancelBtn = oldCancel.cloneNode(true);
+    oldConfirm.parentNode.replaceChild(confirmBtn, oldConfirm);
+    oldCancel.parentNode.replaceChild(cancelBtn, oldCancel);
+
+    confirmBtn.textContent = 'Add Power';
+    confirmBtn.classList.add('hidden');
+    cancelBtn.textContent = 'No Thanks';
+
+    let selectedIndex = null;
+
+    body.querySelectorAll('.bonus-power-option').forEach(option => {
+        option.addEventListener('click', () => {
+            body.querySelectorAll('.bonus-power-option').forEach(o => o.classList.remove('selected'));
+            option.classList.add('selected');
+            selectedIndex = parseInt(option.dataset.index);
+            confirmBtn.classList.remove('hidden');
+        });
+    });
+
+    confirmBtn.addEventListener('click', () => {
+        if (selectedIndex !== null) {
+            const selectedName = powers[selectedIndex];
+            const powerData = sensesPowers.find(p => p.name === selectedName);
+            const slotsNeeded = powerData && powerData.starred ? 2 : 1;
+            const effectiveLimit = getEffectiveLimit(currentCharacter.powerDetails);
+            const slotsRemaining = effectiveLimit - currentCharacter.powerDetails.current;
+            if (slotsNeeded > slotsRemaining) {
+                showAlertModal(`${selectedName} costs ${slotsNeeded} slot(s) but you only have ${slotsRemaining} remaining.`, 'Not Enough Slots');
+                return;
+            }
+            modal.classList.remove('active');
+            onSelect(selectedName);
+        }
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        modal.classList.remove('active');
+    });
+
+    modal.classList.add('active');
+}
+
+/**
  * Remove a power from the character
  */
 function removePowerFromCharacter(index) {
@@ -1311,10 +1658,16 @@ function renderPowersList() {
         const battlesuitTag = (hasBattlesuit && power.name === 'Body Armor')
             ? ' <span class="battlesuit-tag">BATTLE-SUIT</span>'
             : (hasBattlesuit ? ' <span class="battlesuit-equipped-tag">[In Suit]</span>' : '');
+        const subtypeTag = power.subtype
+            ? ` <span class="power-subtype-tag">(${power.subtype})</span>`
+            : '';
+        const bonusTag = power.isBonusPower
+            ? ' <span class="bonus-power-indicator">BONUS</span>'
+            : '';
         html += `
             <div class="power-card${hasBattlesuit && power.name === 'Body Armor' ? ' battlesuit-card' : ''}">
                 <div class="power-info">
-                    <div class="power-name">${power.name}${starredIndicator}${battlesuitTag}</div>
+                    <div class="power-name">${power.name}${subtypeTag}${starredIndicator}${bonusTag}${battlesuitTag}</div>
                     <div class="power-details">
                         Category: ${power.category} |
                         Rank: ${power.rank} (${power.value})

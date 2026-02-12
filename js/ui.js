@@ -17,6 +17,11 @@ function initializeEventListeners() {
     // Abilities
     document.getElementById('rollAllAbilities').addEventListener('click', handleRollAllAbilities);
     document.getElementById('confirmAbilities')?.addEventListener('click', () => {
+        // Require Altered Humans to select a boost ability before continuing
+        if (currentCharacter.origin === 'Altered Human' && !currentCharacter.alteredHumanBoostAbility) {
+            showAlertModal('Please choose one ability to raise by one rank before continuing.', 'Ability Boost Required');
+            return;
+        }
         applyOriginModifiers(currentCharacter);
         updateSecondaryAbilities();
         nextStep();
@@ -164,6 +169,10 @@ function handleRollAllAbilities() {
     });
 
     document.getElementById('confirmAbilities').classList.remove('hidden');
+
+    // Show Altered Human ability boost selector
+    showAlteredHumanBoostSelector();
+
     updateSummary();
 }
 
@@ -180,7 +189,61 @@ function rerollAbility(abilityName) {
     row.querySelector('.rank-result').textContent = result.rank;
     row.querySelector('.value-result').textContent = result.value;
 
+    // Refresh boost selector to reflect new rank values
+    showAlteredHumanBoostSelector();
+
     updateSummary();
+}
+
+/**
+ * Show the Altered Human ability boost selector in the origin modifier box.
+ * Allows the player to choose one primary ability to raise by one rank.
+ */
+function showAlteredHumanBoostSelector() {
+    const modifierBox = document.getElementById('originModifier');
+
+    if (currentCharacter.origin !== 'Altered Human') {
+        modifierBox.classList.add('hidden');
+        currentCharacter.alteredHumanBoostAbility = null;
+        return;
+    }
+
+    const abilities = [
+        { key: 'fighting', label: 'Fighting (F)' },
+        { key: 'agility', label: 'Agility (A)' },
+        { key: 'strength', label: 'Strength (S)' },
+        { key: 'endurance', label: 'Endurance (E)' },
+        { key: 'reason', label: 'Reason (R)' },
+        { key: 'intuition', label: 'Intuition (I)' },
+        { key: 'psyche', label: 'Psyche (P)' }
+    ];
+
+    let html = '<h4>Altered Human Bonus</h4>';
+    html += '<p>Choose one primary ability to raise by one rank:</p>';
+    html += '<div class="boost-options">';
+    abilities.forEach(a => {
+        const ability = currentCharacter.primaryAbilities[a.key];
+        const nextRank = getNextRank(ability.rank);
+        const nextValue = getRankValue(nextRank);
+        const isSelected = currentCharacter.alteredHumanBoostAbility === a.key;
+        html += `<button class="boost-option${isSelected ? ' selected' : ''}" data-ability="${a.key}">
+            ${a.label}: ${ability.rank} → ${nextRank} (${nextValue})
+        </button>`;
+    });
+    html += '</div>';
+
+    modifierBox.innerHTML = html;
+    modifierBox.classList.remove('hidden');
+
+    // Attach click handlers
+    modifierBox.querySelectorAll('.boost-option').forEach(btn => {
+        btn.addEventListener('click', () => {
+            currentCharacter.alteredHumanBoostAbility = btn.dataset.ability;
+            // Update selection styling
+            modifierBox.querySelectorAll('.boost-option').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+        });
+    });
 }
 
 function updateSecondaryAbilities() {

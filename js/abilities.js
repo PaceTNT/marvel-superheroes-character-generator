@@ -88,8 +88,18 @@ function applyOriginModifiers(character) {
             pop.generallyUnpopular = true;
             break;
 
+        case "Altered Human":
+            // Raise one chosen primary ability by one rank
+            if (character.alteredHumanBoostAbility) {
+                const ability = character.primaryAbilities[character.alteredHumanBoostAbility];
+                const boostedRank = getNextRank(ability.rank);
+                ability.rank = boostedRank;
+                ability.value = getRankValue(boostedRank);
+            }
+            pop.base = 10;
+            break;
+
         default:
-            // Altered Human and others: base 10
             pop.base = 10;
             break;
     }

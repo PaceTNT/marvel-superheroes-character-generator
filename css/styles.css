@@ -241,6 +241,36 @@ header h2 {
     border-radius: 5px;
 }
 
+/* Altered Human Boost Selector */
+.boost-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.boost-option {
+    padding: 8px 14px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    background: white;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.2s;
+}
+
+.boost-option:hover {
+    border-color: #ff9800;
+    background: #fff8e1;
+}
+
+.boost-option.selected {
+    border-color: #ff9800;
+    background: #fff3e0;
+    font-weight: bold;
+    box-shadow: 0 0 8px rgba(255, 152, 0, 0.3);
+}
+
 /* Abilities Table */
 .abilities-table {
     width: 100%;

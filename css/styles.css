@@ -934,8 +934,33 @@ header h2 {
 @media print {
     body {
         background: white;
+        padding: 0;
+        margin: 0;
     }
 
+    .container {
+        box-shadow: none;
+        border-radius: 0;
+        max-width: 100%;
+    }
+
+    header {
+        padding: 12px 20px;
+        background: #ED1D24;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    header h1 {
+        font-size: 1.5em;
+        margin-bottom: 2px;
+    }
+
+    header h2 {
+        font-size: 1em;
+    }
+
+    .btn-start-over,
     .generation-panel,
     .step-indicator,
     .export-buttons,
@@ -943,9 +968,141 @@ header h2 {
         display: none !important;
     }
 
+    .main-content {
+        display: block;
+        padding: 15px 20px;
+    }
+
     .summary-panel {
         position: static;
         box-shadow: none;
+        background: white;
+        padding: 0;
+    }
+
+    .summary-panel h3 {
+        display: none;
+    }
+
+    #characterSummary h2 {
+        font-size: 1.6em;
+        margin-bottom: 2px;
+        color: #ED1D24;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    #characterSummary h4 {
+        font-size: 1.1em;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 3px;
+        margin-top: 12px;
+        margin-bottom: 6px;
+    }
+
+    .sheet-abilities-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px 30px;
+    }
+
+    .sheet-abilities-grid h4 {
+        margin-top: 0 !important;
+    }
+
+    .sheet-abilities-primary table,
+    .sheet-abilities-secondary table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9em;
+    }
+
+    .sheet-abilities-primary td,
+    .sheet-abilities-primary th,
+    .sheet-abilities-secondary td,
+    .sheet-abilities-secondary th {
+        padding: 3px 8px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .sheet-powers-summary {
+        page-break-inside: avoid;
+    }
+
+    .sheet-powers-summary table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9em;
+    }
+
+    .sheet-powers-summary th {
+        text-align: left;
+        background: #f5f5f5;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        padding: 4px 8px;
+        border-bottom: 2px solid #ccc;
+        font-size: 0.85em;
+        text-transform: uppercase;
+        color: #555;
+    }
+
+    .sheet-powers-summary td {
+        padding: 4px 8px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .sheet-talents-summary table,
+    .sheet-contacts-summary table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9em;
+    }
+
+    .sheet-talents-summary th,
+    .sheet-contacts-summary th {
+        text-align: left;
+        background: #f5f5f5;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        padding: 4px 8px;
+        border-bottom: 2px solid #ccc;
+        font-size: 0.85em;
+        text-transform: uppercase;
+        color: #555;
+    }
+
+    .sheet-talents-summary td,
+    .sheet-contacts-summary td {
+        padding: 4px 8px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .sheet-power-block,
+    .sheet-talent-block,
+    .sheet-contact-block {
+        page-break-inside: avoid;
+        padding: 8px 12px;
+        margin-bottom: 8px;
+        font-size: 0.85em;
+    }
+
+    .sheet-power-block h5,
+    .sheet-talent-block h5,
+    .sheet-contact-block h5 {
+        font-size: 0.95em;
+    }
+
+    .sheet-section-details {
+        break-before: page;
+    }
+
+    .sheet-section-details h4 {
+        margin-top: 0 !important;
+    }
+
+    .power-detail-table {
+        font-size: 0.85em;
     }
 }
 
@@ -992,6 +1149,65 @@ header h2 {
     color: #ED1D24;
     margin-bottom: 8px;
     font-size: 1.05em;
+}
+
+/* Character sheet layout (abilities grid, summary tables) */
+.sheet-abilities-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 30px;
+    margin: 10px 0;
+}
+
+.sheet-abilities-grid h4 {
+    margin-top: 0;
+}
+
+.sheet-abilities-primary table,
+.sheet-abilities-secondary table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.sheet-abilities-primary td,
+.sheet-abilities-secondary td {
+    padding: 3px 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.sheet-powers-summary table,
+.sheet-talents-summary table,
+.sheet-contacts-summary table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+}
+
+.sheet-powers-summary th,
+.sheet-talents-summary th,
+.sheet-contacts-summary th {
+    text-align: left;
+    background: #f5f5f5;
+    padding: 4px 8px;
+    border-bottom: 2px solid #ccc;
+    font-size: 0.85em;
+    text-transform: uppercase;
+    color: #555;
+}
+
+.sheet-powers-summary td,
+.sheet-talents-summary td,
+.sheet-contacts-summary td {
+    padding: 4px 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.sheet-section-details {
+    margin-top: 15px;
+}
+
+.sheet-section-details h4 {
+    margin-top: 15px;
 }
 
 /* ===== Image Generation Prompt Feature ===== */

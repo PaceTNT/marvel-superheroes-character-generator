@@ -741,36 +741,43 @@ function generateCharacterSheet() {
 
     // Powers, talents, contacts are already tracked in their Details objects
 
+    // Popularity display helper
+    const popularityDisplay = (() => {
+        const p = currentCharacter.secondaryAbilities.popularity;
+        if (p && typeof p === 'object') {
+            return p.hasSecretId ? `(${p.heroPopularity})/(${p.secretPopularity})` : p.heroPopularity;
+        }
+        return p;
+    })();
+
     // Show final summary
     let html = `
         <h2>${currentCharacter.name || 'Unnamed Hero'}</h2>
-        <p><em>${currentCharacter.realName || 'Unknown Identity'}</em></p>
+        <p><em>${currentCharacter.realName || 'Unknown Identity'}</em> &mdash; ${currentCharacter.origin}</p>
 
-        <h4>Origin</h4>
-        <p>${currentCharacter.origin}</p>
-
-        <h4>Primary Abilities</h4>
-        <ul>
-            <li>Fighting: ${currentCharacter.primaryAbilities.fighting.rank} (${currentCharacter.primaryAbilities.fighting.value})</li>
-            <li>Agility: ${currentCharacter.primaryAbilities.agility.rank} (${currentCharacter.primaryAbilities.agility.value})</li>
-            <li>Strength: ${currentCharacter.primaryAbilities.strength.rank} (${currentCharacter.primaryAbilities.strength.value})</li>
-            <li>Endurance: ${currentCharacter.primaryAbilities.endurance.rank} (${currentCharacter.primaryAbilities.endurance.value})</li>
-            <li>Reason: ${currentCharacter.primaryAbilities.reason.rank} (${currentCharacter.primaryAbilities.reason.value})</li>
-            <li>Intuition: ${currentCharacter.primaryAbilities.intuition.rank} (${currentCharacter.primaryAbilities.intuition.value})</li>
-            <li>Psyche: ${currentCharacter.primaryAbilities.psyche.rank} (${currentCharacter.primaryAbilities.psyche.value})</li>
-        </ul>
-
-        <h4>Secondary Abilities</h4>
-        <p>Health: ${currentCharacter.secondaryAbilities.health}</p>
-        <p>Karma: ${currentCharacter.secondaryAbilities.karma}</p>
-        <p>Resources: ${currentCharacter.secondaryAbilities.resources ? currentCharacter.secondaryAbilities.resources.rank : 'N/A'}</p>
-        <p>Popularity: ${(() => {
-            const p = currentCharacter.secondaryAbilities.popularity;
-            if (p && typeof p === 'object') {
-                return p.hasSecretId ? `(${p.heroPopularity})/(${p.secretPopularity})` : p.heroPopularity;
-            }
-            return p;
-        })()}</p>
+        <div class="sheet-abilities-grid">
+            <div class="sheet-abilities-primary">
+                <h4>Primary Abilities</h4>
+                <table>
+                    <tr><td><strong>Fighting</strong></td><td>${currentCharacter.primaryAbilities.fighting.rank} (${currentCharacter.primaryAbilities.fighting.value})</td></tr>
+                    <tr><td><strong>Agility</strong></td><td>${currentCharacter.primaryAbilities.agility.rank} (${currentCharacter.primaryAbilities.agility.value})</td></tr>
+                    <tr><td><strong>Strength</strong></td><td>${currentCharacter.primaryAbilities.strength.rank} (${currentCharacter.primaryAbilities.strength.value})</td></tr>
+                    <tr><td><strong>Endurance</strong></td><td>${currentCharacter.primaryAbilities.endurance.rank} (${currentCharacter.primaryAbilities.endurance.value})</td></tr>
+                    <tr><td><strong>Reason</strong></td><td>${currentCharacter.primaryAbilities.reason.rank} (${currentCharacter.primaryAbilities.reason.value})</td></tr>
+                    <tr><td><strong>Intuition</strong></td><td>${currentCharacter.primaryAbilities.intuition.rank} (${currentCharacter.primaryAbilities.intuition.value})</td></tr>
+                    <tr><td><strong>Psyche</strong></td><td>${currentCharacter.primaryAbilities.psyche.rank} (${currentCharacter.primaryAbilities.psyche.value})</td></tr>
+                </table>
+            </div>
+            <div class="sheet-abilities-secondary">
+                <h4>Secondary Abilities</h4>
+                <table>
+                    <tr><td><strong>Health</strong></td><td>${currentCharacter.secondaryAbilities.health}</td></tr>
+                    <tr><td><strong>Karma</strong></td><td>${currentCharacter.secondaryAbilities.karma}</td></tr>
+                    <tr><td><strong>Resources</strong></td><td>${currentCharacter.secondaryAbilities.resources ? currentCharacter.secondaryAbilities.resources.rank : 'N/A'}</td></tr>
+                    <tr><td><strong>Popularity</strong></td><td>${popularityDisplay}</td></tr>
+                </table>
+            </div>
+        </div>
 
         ${currentCharacter.battlesuit ? `<h4>Battle-Suit</h4>
             <p>All powers are combined into an artificial battle-suit.</p>
@@ -786,30 +793,78 @@ function generateCharacterSheet() {
                 </tbody>
             </table>` : ''}
 
-        ${currentCharacter.powerDetails.list.length ? `<h4>Powers</h4>${currentCharacter.powerDetails.list.map(p => {
-            const details = typeof POWER_DETAILS_DATA !== 'undefined' ? POWER_DETAILS_DATA[p.name] : null;
-            return `<div class="sheet-power-block">
-                <h5>${p.name}${p.starred ? ' ⭐⭐' : ''} - ${p.rank} (${p.value}) - ${p.category}</h5>
-                ${details ? renderPowerDetailsHTML(details) : '<p class="empty-state">No detailed description available.</p>'}
-            </div>`;
-        }).join('')}` : ''}
-        ${currentCharacter.talentDetails.list.length ? `<h4>Talents</h4>${currentCharacter.talentDetails.list.map(t => {
-            const tDetails = typeof TALENT_DETAILS_DATA !== 'undefined' ? TALENT_DETAILS_DATA[t.name] : null;
-            return `<div class="sheet-talent-block">
-                <h5>${t.name}${t.rank ? ` - ${t.rank} (${t.value})` : ''} - ${t.category}</h5>
-                ${tDetails ? renderTalentDetailsHTML(tDetails) : '<p class="empty-state">No detailed description available.</p>'}
-            </div>`;
-        }).join('')}` : ''}
-        ${currentCharacter.contactDetails.list.length ? `<h4>Contacts</h4>${currentCharacter.contactDetails.list.map(c => {
-            const cDetails = typeof CONTACT_DETAILS_DATA !== 'undefined' ? CONTACT_DETAILS_DATA[c.type] : null;
-            return `<div class="sheet-contact-block">
-                <h5>${c.name} - ${c.type} (${c.category})</h5>
-                ${cDetails ? renderContactDetailsHTML(cDetails) : '<p class="empty-state">No detailed description available.</p>'}
-            </div>`;
-        }).join('')}` : ''}
+        ${currentCharacter.powerDetails.list.length ? `
+            <h4>Powers</h4>
+            <div class="sheet-powers-summary">
+                <table>
+                    <thead><tr><th>Power</th><th>Rank</th><th>Value</th><th>Category</th></tr></thead>
+                    <tbody>
+                    ${currentCharacter.powerDetails.list.map(p => `<tr><td>${p.name}${p.starred ? ' ⭐⭐' : ''}</td><td>${p.rank}</td><td>${p.value}</td><td>${p.category}</td></tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>` : ''}
+
+        ${currentCharacter.talentDetails.list.length ? `
+            <h4>Talents</h4>
+            <div class="sheet-talents-summary">
+                <table>
+                    <thead><tr><th>Talent</th><th>Rank</th><th>Category</th></tr></thead>
+                    <tbody>
+                    ${currentCharacter.talentDetails.list.map(t => `<tr><td>${t.name}</td><td>${t.rank ? `${t.rank} (${t.value})` : '—'}</td><td>${t.category}</td></tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>` : ''}
+
+        ${currentCharacter.contactDetails.list.length ? `
+            <h4>Contacts</h4>
+            <div class="sheet-contacts-summary">
+                <table>
+                    <thead><tr><th>Name</th><th>Type</th><th>Category</th></tr></thead>
+                    <tbody>
+                    ${currentCharacter.contactDetails.list.map(c => `<tr><td>${c.name}</td><td>${c.type}</td><td>${c.category}</td></tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>` : ''}
+
         ${currentCharacter.equipment.length ? `<h4>Equipment</h4><ul>${currentCharacter.equipment.map(e => `<li>${e}</li>`).join('')}</ul>` : ''}
 
         ${currentCharacter.backstory ? `<h4>Backstory</h4><p>${currentCharacter.backstory}</p>` : ''}
+
+        ${currentCharacter.powerDetails.list.length ? `
+            <div class="sheet-section-details">
+                <h4>Power Details</h4>
+                ${currentCharacter.powerDetails.list.map(p => {
+                    const details = typeof POWER_DETAILS_DATA !== 'undefined' ? POWER_DETAILS_DATA[p.name] : null;
+                    return `<div class="sheet-power-block">
+                        <h5>${p.name}${p.starred ? ' ⭐⭐' : ''} — ${p.rank} (${p.value})</h5>
+                        ${details ? renderPowerDetailsHTML(details) : '<p class="empty-state">No detailed description available.</p>'}
+                    </div>`;
+                }).join('')}
+            </div>` : ''}
+
+        ${currentCharacter.talentDetails.list.length ? `
+            <div class="sheet-section-details">
+                <h4>Talent Details</h4>
+                ${currentCharacter.talentDetails.list.map(t => {
+                    const tDetails = typeof TALENT_DETAILS_DATA !== 'undefined' ? TALENT_DETAILS_DATA[t.name] : null;
+                    return `<div class="sheet-talent-block">
+                        <h5>${t.name}${t.rank ? ` — ${t.rank} (${t.value})` : ''}</h5>
+                        ${tDetails ? renderTalentDetailsHTML(tDetails) : '<p class="empty-state">No detailed description available.</p>'}
+                    </div>`;
+                }).join('')}
+            </div>` : ''}
+
+        ${currentCharacter.contactDetails.list.length ? `
+            <div class="sheet-section-details">
+                <h4>Contact Details</h4>
+                ${currentCharacter.contactDetails.list.map(c => {
+                    const cDetails = typeof CONTACT_DETAILS_DATA !== 'undefined' ? CONTACT_DETAILS_DATA[c.type] : null;
+                    return `<div class="sheet-contact-block">
+                        <h5>${c.name} — ${c.type}</h5>
+                        ${cDetails ? renderContactDetailsHTML(cDetails) : '<p class="empty-state">No detailed description available.</p>'}
+                    </div>`;
+                }).join('')}
+            </div>` : ''}
     `;
 
     document.getElementById('characterSummary').innerHTML = html;

@@ -1174,15 +1174,16 @@ function handleModalConfirm() {
             return;
         }
 
-        // Roll rank for the power
+        // Roll rank for the power, enforcing minimum rank if applicable
         const rankResult = rollPowerRank();
+        const enforced = applyMinimumRank(rankResult.rank, modalState.selectedPower.name, currentCharacter.primaryAbilities);
 
         // Create power object
         const power = {
             name: modalState.selectedPower.name,
             category: modalState.selectedCategory,
-            rank: rankResult.rank,
-            value: rankResult.value,
+            rank: enforced.rank,
+            value: enforced.value,
             starred: modalState.selectedPower.starred,
             bonus: modalState.selectedPower.bonus
         };
@@ -1325,6 +1326,7 @@ function offerBonusPower(power) {
  */
 function createBonusPower(powerName, category) {
     const rankResult = rollPowerRank();
+    const enforced = applyMinimumRank(rankResult.rank, powerName, currentCharacter.primaryAbilities);
     // Look up if this power is starred
     const powers = POWERS_DATA.powersList[category] || [];
     const powerData = powers.find(p => p.name === powerName);
@@ -1333,8 +1335,8 @@ function createBonusPower(powerName, category) {
     return {
         name: powerName,
         category: category,
-        rank: rankResult.rank,
-        value: rankResult.value,
+        rank: enforced.rank,
+        value: enforced.value,
         starred: starred,
         bonus: null,
         isBonusPower: true

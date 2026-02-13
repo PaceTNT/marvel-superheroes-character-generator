@@ -74,3 +74,44 @@ function applyRankModifier(baseRankName, steps) {
 function getRankIndex(rankName) {
     return RANKS_DATA.ranks.findIndex(r => r.name === rankName);
 }
+
+/**
+ * Enforce a power's minimum rank based on POWER_DETAILS_DATA.
+ * If the power has a minimumRank like "Endurance +1CS" or "Intuition",
+ * the rolled rank is raised to that minimum if it's lower.
+ * @param {string} rolledRankName - The rank name from the initial roll
+ * @param {string} powerName - The power name to look up in POWER_DETAILS_DATA
+ * @param {object} primaryAbilities - The character's primaryAbilities (e.g., { fighting: {rank, value}, ... })
+ * @returns {{ rank: string, value: number }} - The (possibly raised) rank name and value
+ */
+function applyMinimumRank(rolledRankName, powerName, primaryAbilities) {
+    const details = typeof POWER_DETAILS_DATA !== 'undefined' ? POWER_DETAILS_DATA[powerName] : null;
+    if (!details || !details.minimumRank) {
+        return { rank: rolledRankName, value: getRankValue(rolledRankName) };
+    }
+
+    // Parse minimumRank string: "Ability +NCS" or just "Ability"
+    const match = details.minimumRank.match(/^(\w+)\s*(?:\+(\d+)CS)?$/);
+    if (!match) {
+        return { rank: rolledRankName, value: getRankValue(rolledRankName) };
+    }
+
+    const abilityName = match[1].toLowerCase(); // e.g., "endurance", "fighting"
+    const columnShift = match[2] ? parseInt(match[2], 10) : 0;
+
+    const ability = primaryAbilities[abilityName];
+    if (!ability || !ability.rank) {
+        return { rank: rolledRankName, value: getRankValue(rolledRankName) };
+    }
+
+    // Compute the minimum rank by applying the column shift to the ability rank
+    const minimumRankName = columnShift > 0 ? getNextRank(ability.rank, columnShift) : ability.rank;
+    const minimumIndex = getRankIndex(minimumRankName);
+    const rolledIndex = getRankIndex(rolledRankName);
+
+    if (rolledIndex < minimumIndex) {
+        return { rank: minimumRankName, value: getRankValue(minimumRankName) };
+    }
+
+    return { rank: rolledRankName, value: getRankValue(rolledRankName) };
+}

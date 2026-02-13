@@ -2575,15 +2575,15 @@ function generateImagePrompt() {
     const artStyles = [
         {
             era: "1960s",
-            description: "classic 1960s Marvel Comics style, bold ink lines, Ben-Day dots, four-color printing aesthetic, dramatic inspired poses and perspectives, thick black outlines"
+            description: "classic 1960s Comics style, bold ink lines, Ben-Day dots, four-color printing aesthetic, dramatic inspired poses and perspectives, thick black outlines"
         },
         {
             era: "1980s",
-            description: "1980s Marvel Comics style, detailed cross-hatching, dynamic anatomy, rich color palette, and cinematic compositions"
+            description: "1980s Comics style, detailed cross-hatching, dynamic anatomy, rich color palette, and cinematic compositions"
         },
         {
             era: "1990s",
-            description: "1990s Marvel Comics style, extreme musculature, hyper-detailed rendering, heavy shadows and dramatic lighting, dynamic splash-page composition"
+            description: "1990s Comics style, extreme musculature, hyper-detailed rendering, heavy shadows and dramatic lighting, dynamic splash-page composition"
         }
     ];
     const selectedStyle = artStyles[Math.floor(Math.random() * artStyles.length)];

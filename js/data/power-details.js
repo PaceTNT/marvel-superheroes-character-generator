@@ -117,7 +117,7 @@ const POWER_DETAILS_DATA = {
     "example": "Wolverine goes up against a Sentinel with his Unearthly material strength claws which inflict Good damage. If he attacks the Sentinel directly he won't get too far; the robot's Body Armor is too thick. If he concentrates on the armor, however, he can shred it with a Red FEAT roll. This trick would not operate on Iron Man (personal Force Field) or the Thing (natural Body Armor).",
     "notes": "Against living creatures, claw attacks are resolved on the Edged Attack column for Power rank damage. Against non-living materials, compare the material strength of the claws against the material strength of the object. Make a Strength FEAT roll to determine if the object holds up to the attack. This applies to Body Armor that is not natural (inborn) as well as doors, walls, and other inanimate objects. This does not apply to Body Armor that is a natural part of the character, or to energy constructs such as force fields."
   },
-  "Paralysis Touch": {
+  "Paralyzing Touch": {
     "description": "Those touched by an individual with this Power must make an Endurance FEAT against this Power rank, or be knocked out for 1-10 rounds. This Power is always in operation, and the user may be knocked out himself by such a touch.",
     "example": null,
     "notes": null

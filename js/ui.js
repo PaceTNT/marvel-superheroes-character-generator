@@ -1018,6 +1018,11 @@ function handleRollRandomPower() {
     // Roll a complete power
     const power = rollCompletePower();
 
+    // Enforce minimum rank if applicable
+    const enforced = applyMinimumRank(power.rank, power.name, currentCharacter.primaryAbilities);
+    power.rank = enforced.rank;
+    power.value = enforced.value;
+
     // Check if this power would exceed the limit
     const slotsNeeded = power.starred ? 2 : 1;
     if (currentCharacter.powerDetails.current + slotsNeeded > effectivePowerLimit) {

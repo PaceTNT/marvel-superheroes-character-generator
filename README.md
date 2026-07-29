@@ -29,8 +29,8 @@ This project provides a complete design and implementation plan for building a c
   - Print character sheet
 
 ### Enhanced Features (Planned)
-- Finish the details (ex: Hi-Tech body armor stats mods)
-- Generate a prompt for creating an image of your hero based on stats/powers
+- ~~Finish the details (ex: Hi-Tech body armor stats mods)~~
+- ~~Generate a prompt for creating an image of your hero based on stats/powers~~
 - Random name generator
 - Better character sheet
 

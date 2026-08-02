@@ -9,7 +9,16 @@ const RANKS_DATA = {
         { name: "Remarkable", value: 26, columns: { 1: [61, 80], 2: null, 3: [96, 100], 4: [51, 70], 5: [61, 70] } },
         { name: "Incredible", value: 36, columns: { 1: [81, 96], 2: null, 3: null, 4: [71, 90], 5: [71, 80] } },
         { name: "Amazing", value: 46, columns: { 1: [97, 100], 2: null, 3: null, 4: [91, 98], 5: [81, 95] } },
-        { name: "Monstrous", value: 63, columns: { 1: null, 2: null, 3: null, 4: [99, 100], 5: [96, 100] } }
+        { name: "Monstrous", value: 63, columns: { 1: null, 2: null, 3: null, 4: [99, 100], 5: [96, 100] } },
+        // Ranks below are unattainable via rolling and exist only for manual entry (no roll columns).
+        { name: "Unearthly", value: 88, columns: { 1: null, 2: null, 3: null, 4: null, 5: null } },
+        { name: "Shift X", value: 126, columns: { 1: null, 2: null, 3: null, 4: null, 5: null } },
+        { name: "Shift Y", value: 176, columns: { 1: null, 2: null, 3: null, 4: null, 5: null } },
+        { name: "Shift Z", value: 351, columns: { 1: null, 2: null, 3: null, 4: null, 5: null } },
+        { name: "Class 1000", value: 1000, columns: { 1: null, 2: null, 3: null, 4: null, 5: null } },
+        { name: "Class 3000", value: 3000, columns: { 1: null, 2: null, 3: null, 4: null, 5: null } },
+        { name: "Class 5000", value: 5000, columns: { 1: null, 2: null, 3: null, 4: null, 5: null } },
+        { name: "Beyond", value: 10000, columns: { 1: null, 2: null, 3: null, 4: null, 5: null } }
     ]
 };
 
@@ -76,6 +85,38 @@ function getRankIndex(rankName) {
 }
 
 /**
+ * Compute a power's minimum rank floor based on POWER_DETAILS_DATA, if any.
+ * If the power has a minimumRank like "Endurance +1CS" or "Intuition",
+ * this resolves it against the character's current primary abilities.
+ * @param {string} powerName - The power name to look up in POWER_DETAILS_DATA
+ * @param {object} primaryAbilities - The character's primaryAbilities (e.g., { fighting: {rank, value}, ... })
+ * @returns {string|null} - The minimum rank name, or null if the power has no minimum rank
+ */
+function computeMinimumRank(powerName, primaryAbilities) {
+    const details = typeof POWER_DETAILS_DATA !== 'undefined' ? POWER_DETAILS_DATA[powerName] : null;
+    if (!details || !details.minimumRank) {
+        return null;
+    }
+
+    // Parse minimumRank string: "Ability +NCS" or just "Ability"
+    const match = details.minimumRank.match(/^(\w+)\s*(?:\+(\d+)CS)?$/);
+    if (!match) {
+        return null;
+    }
+
+    const abilityName = match[1].toLowerCase(); // e.g., "endurance", "fighting"
+    const columnShift = match[2] ? parseInt(match[2], 10) : 0;
+
+    const ability = primaryAbilities[abilityName];
+    if (!ability || !ability.rank) {
+        return null;
+    }
+
+    // Compute the minimum rank by applying the column shift to the ability rank
+    return columnShift > 0 ? getNextRank(ability.rank, columnShift) : ability.rank;
+}
+
+/**
  * Enforce a power's minimum rank based on POWER_DETAILS_DATA.
  * If the power has a minimumRank like "Endurance +1CS" or "Intuition",
  * the rolled rank is raised to that minimum if it's lower.
@@ -85,27 +126,11 @@ function getRankIndex(rankName) {
  * @returns {{ rank: string, value: number }} - The (possibly raised) rank name and value
  */
 function applyMinimumRank(rolledRankName, powerName, primaryAbilities) {
-    const details = typeof POWER_DETAILS_DATA !== 'undefined' ? POWER_DETAILS_DATA[powerName] : null;
-    if (!details || !details.minimumRank) {
+    const minimumRankName = computeMinimumRank(powerName, primaryAbilities);
+    if (!minimumRankName) {
         return { rank: rolledRankName, value: getRankValue(rolledRankName) };
     }
 
-    // Parse minimumRank string: "Ability +NCS" or just "Ability"
-    const match = details.minimumRank.match(/^(\w+)\s*(?:\+(\d+)CS)?$/);
-    if (!match) {
-        return { rank: rolledRankName, value: getRankValue(rolledRankName) };
-    }
-
-    const abilityName = match[1].toLowerCase(); // e.g., "endurance", "fighting"
-    const columnShift = match[2] ? parseInt(match[2], 10) : 0;
-
-    const ability = primaryAbilities[abilityName];
-    if (!ability || !ability.rank) {
-        return { rank: rolledRankName, value: getRankValue(rolledRankName) };
-    }
-
-    // Compute the minimum rank by applying the column shift to the ability rank
-    const minimumRankName = columnShift > 0 ? getNextRank(ability.rank, columnShift) : ability.rank;
     const minimumIndex = getRankIndex(minimumRankName);
     const rolledIndex = getRankIndex(rolledRankName);
 

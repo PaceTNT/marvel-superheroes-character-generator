@@ -80,49 +80,49 @@
                                 <td class="roll-result">-</td>
                                 <td class="rank-result">-</td>
                                 <td class="value-result">-</td>
-                                <td><button class="btn-small" onclick="rerollAbility('fighting')">🔄</button></td>
+                                <td><button class="btn-small" onclick="rerollAbility('fighting')">🔄</button> <button class="btn-small" onclick="openModifyAbilityModal('fighting')">✏️</button></td>
                             </tr>
                             <tr data-ability="agility">
                                 <td>Agility (A)</td>
                                 <td class="roll-result">-</td>
                                 <td class="rank-result">-</td>
                                 <td class="value-result">-</td>
-                                <td><button class="btn-small" onclick="rerollAbility('agility')">🔄</button></td>
+                                <td><button class="btn-small" onclick="rerollAbility('agility')">🔄</button> <button class="btn-small" onclick="openModifyAbilityModal('agility')">✏️</button></td>
                             </tr>
                             <tr data-ability="strength">
                                 <td>Strength (S)</td>
                                 <td class="roll-result">-</td>
                                 <td class="rank-result">-</td>
                                 <td class="value-result">-</td>
-                                <td><button class="btn-small" onclick="rerollAbility('strength')">🔄</button></td>
+                                <td><button class="btn-small" onclick="rerollAbility('strength')">🔄</button> <button class="btn-small" onclick="openModifyAbilityModal('strength')">✏️</button></td>
                             </tr>
                             <tr data-ability="endurance">
                                 <td>Endurance (E)</td>
                                 <td class="roll-result">-</td>
                                 <td class="rank-result">-</td>
                                 <td class="value-result">-</td>
-                                <td><button class="btn-small" onclick="rerollAbility('endurance')">🔄</button></td>
+                                <td><button class="btn-small" onclick="rerollAbility('endurance')">🔄</button> <button class="btn-small" onclick="openModifyAbilityModal('endurance')">✏️</button></td>
                             </tr>
                             <tr data-ability="reason">
                                 <td>Reason (R)</td>
                                 <td class="roll-result">-</td>
                                 <td class="rank-result">-</td>
                                 <td class="value-result">-</td>
-                                <td><button class="btn-small" onclick="rerollAbility('reason')">🔄</button></td>
+                                <td><button class="btn-small" onclick="rerollAbility('reason')">🔄</button> <button class="btn-small" onclick="openModifyAbilityModal('reason')">✏️</button></td>
                             </tr>
                             <tr data-ability="intuition">
                                 <td>Intuition (I)</td>
                                 <td class="roll-result">-</td>
                                 <td class="rank-result">-</td>
                                 <td class="value-result">-</td>
-                                <td><button class="btn-small" onclick="rerollAbility('intuition')">🔄</button></td>
+                                <td><button class="btn-small" onclick="rerollAbility('intuition')">🔄</button> <button class="btn-small" onclick="openModifyAbilityModal('intuition')">✏️</button></td>
                             </tr>
                             <tr data-ability="psyche">
                                 <td>Psyche (P)</td>
                                 <td class="roll-result">-</td>
                                 <td class="rank-result">-</td>
                                 <td class="value-result">-</td>
-                                <td><button class="btn-small" onclick="rerollAbility('psyche')">🔄</button></td>
+                                <td><button class="btn-small" onclick="rerollAbility('psyche')">🔄</button> <button class="btn-small" onclick="openModifyAbilityModal('psyche')">✏️</button></td>
                             </tr>
                         </tbody>
                     </table>
@@ -487,6 +487,20 @@
                 <button id="battlesuitModalNo" class="btn btn-secondary">No Thanks</button>
                 <button id="battlesuitModalYes" class="btn btn-success">Create Battle-Suit</button>
                 <button id="battlesuitModalClose" class="btn btn-primary hidden">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modify Rank Modal (shared by abilities and powers) -->
+    <div id="modifyRankModal" class="modal-overlay">
+        <div class="modal-content power-details-modal">
+            <h3 id="modifyRankModalTitle">Modify Rank</h3>
+            <div id="modifyRankModalBody">
+                <!-- Content inserted dynamically -->
+            </div>
+            <div class="modal-buttons">
+                <button id="modifyRankModalCancel" class="btn btn-secondary">Cancel</button>
+                <button id="modifyRankModalConfirm" class="btn btn-success">Confirm</button>
             </div>
         </div>
     </div>

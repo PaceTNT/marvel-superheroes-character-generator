@@ -93,6 +93,10 @@ function initializeEventListeners() {
         hideConfirmModal();
     });
 
+    // Modify Rank Modal
+    document.getElementById('modifyRankModalCancel')?.addEventListener('click', hideModifyRankModal);
+    document.getElementById('modifyRankModalConfirm')?.addEventListener('click', confirmModifyRank);
+
     // Start Over
     document.getElementById('startOverBtn')?.addEventListener('click', showStartOverModal);
     document.getElementById('startOverCancel')?.addEventListener('click', hideStartOverModal);
@@ -211,6 +215,133 @@ function rerollAbility(abilityName) {
     showAlteredHumanBoostSelector();
 
     updateSummary();
+}
+
+/**
+ * Build <option> tags for every rank in RANKS_DATA, marking the current rank selected.
+ */
+function buildRankOptionsHTML(selectedRankName) {
+    return RANKS_DATA.ranks.map(r =>
+        `<option value="${r.name}"${r.name === selectedRankName ? ' selected' : ''}>${r.name} (${r.value})</option>`
+    ).join('');
+}
+
+let modifyRankContext = null;
+
+/**
+ * Open the shared rank-picker modal to manually set a primary ability's rank.
+ */
+function openModifyAbilityModal(abilityName) {
+    const ability = currentCharacter.primaryAbilities[abilityName];
+    if (!ability) return;
+
+    modifyRankContext = { type: 'ability', abilityName };
+
+    const label = abilityName.charAt(0).toUpperCase() + abilityName.slice(1);
+    document.getElementById('modifyRankModalTitle').textContent = `Modify ${label}`;
+    document.getElementById('modifyRankModalBody').innerHTML = `
+        <label for="modifyRankSelect">Select Rank:</label>
+        <select id="modifyRankSelect" class="form-select">
+            ${buildRankOptionsHTML(ability.rank)}
+        </select>
+        <p class="modify-rank-note">Note: changing this ability may affect the minimum rank requirements of any powers that depend on it.</p>
+    `;
+
+    document.getElementById('modifyRankModal').classList.add('active');
+}
+
+/**
+ * Open the shared rank-picker modal to manually set a power's rank.
+ * Shows (but does not enforce) the power's normal minimum-rank floor, if any.
+ */
+function openModifyPowerModal(index) {
+    const power = currentCharacter.powerDetails.list[index];
+    if (!power) return;
+
+    modifyRankContext = { type: 'power', index };
+
+    const floorRankName = computeMinimumRank(power.name, currentCharacter.primaryAbilities);
+    document.getElementById('modifyRankModalTitle').textContent = `Modify ${power.name} Rank`;
+    document.getElementById('modifyRankModalBody').innerHTML = `
+        <label for="modifyRankSelect">Select Rank:</label>
+        <select id="modifyRankSelect" class="form-select">
+            ${buildRankOptionsHTML(power.rank)}
+        </select>
+        ${floorRankName ? `<p class="modify-rank-floor-info">Normal minimum rank for this power: ${floorRankName}</p>` : ''}
+        <p id="modifyRankWarning" class="modify-rank-warning hidden"></p>
+    `;
+
+    document.getElementById('modifyRankSelect').addEventListener('change', () => updateModifyRankWarning(floorRankName));
+    updateModifyRankWarning(floorRankName);
+
+    document.getElementById('modifyRankModal').classList.add('active');
+}
+
+function updateModifyRankWarning(floorRankName) {
+    const warningEl = document.getElementById('modifyRankWarning');
+    if (!warningEl) return;
+
+    if (!floorRankName) {
+        warningEl.classList.add('hidden');
+        return;
+    }
+
+    const select = document.getElementById('modifyRankSelect');
+    const selectedIndex = getRankIndex(select.value);
+    const floorIndex = getRankIndex(floorRankName);
+
+    if (selectedIndex < floorIndex) {
+        warningEl.textContent = `⚠️ This is below the normal minimum rank (${floorRankName}) for this power.`;
+        warningEl.classList.remove('hidden');
+    } else {
+        warningEl.classList.add('hidden');
+    }
+}
+
+function confirmModifyRank() {
+    if (!modifyRankContext) return;
+
+    const select = document.getElementById('modifyRankSelect');
+    const selectedName = select.value;
+    const selectedValue = getRankValue(selectedName);
+
+    if (modifyRankContext.type === 'ability') {
+        const abilityName = modifyRankContext.abilityName;
+        const existing = currentCharacter.primaryAbilities[abilityName];
+        currentCharacter.primaryAbilities[abilityName] = {
+            roll: existing ? existing.roll : null,
+            rank: selectedName,
+            value: selectedValue
+        };
+
+        const row = document.querySelector(`tr[data-ability="${abilityName}"]`);
+        if (row) {
+            row.querySelector('.rank-result').textContent = selectedName;
+            row.querySelector('.value-result').textContent = selectedValue;
+        }
+
+        showAlteredHumanBoostSelector();
+        updateSummary();
+        saveCharacterToLocalStorage();
+    } else if (modifyRankContext.type === 'power') {
+        const power = currentCharacter.powerDetails.list[modifyRankContext.index];
+        if (power) {
+            power.rank = selectedName;
+            power.value = selectedValue;
+        }
+
+        renderPowersList();
+        updatePowerSlotsDisplay();
+        updateSummary();
+        saveCharacterToLocalStorage();
+    }
+
+    hideModifyRankModal();
+}
+
+function hideModifyRankModal() {
+    document.getElementById('modifyRankModal').classList.remove('active');
+    modifyRankContext = null;
 }
 
 /**
@@ -1682,6 +1813,7 @@ function renderPowersList() {
                 </div>
                 <div class="power-actions">
                     <button class="btn btn-secondary btn-small" onclick="showPowerDetailsModal('${escapedName}')">📖 Details</button>
+                    <button class="btn btn-secondary btn-small" onclick="openModifyPowerModal(${index})">✏️ Modify</button>
                     <button class="btn btn-warning btn-small" onclick="removePowerFromCharacter(${index})">🗑️ Remove</button>
                 </div>
             </div>

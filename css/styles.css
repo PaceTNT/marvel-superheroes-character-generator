@@ -832,6 +832,33 @@ header h2 {
     background: #f9f9f9;
 }
 
+/* Modify Rank Modal */
+#modifyRankModalBody label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #333;
+}
+
+.modify-rank-note,
+.modify-rank-floor-info {
+    margin-top: 12px;
+    font-size: 0.9em;
+    color: #666;
+    line-height: 1.5;
+}
+
+.modify-rank-warning {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 5px;
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    color: #856404;
+    font-size: 0.9em;
+    line-height: 1.5;
+}
+
 .power-detail-section:first-child {
     background: white;
     padding-left: 0;

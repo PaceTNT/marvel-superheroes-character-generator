@@ -221,7 +221,9 @@ function resetAllUI() {
         '<p class="empty-state">No talents added yet. Click "Roll Random Talent" or "Choose Talent" to begin.</p>';
     document.getElementById('contactsList').innerHTML =
         '<p class="empty-state">No contacts added yet. Click "Choose Contact" to begin.</p>';
-    document.getElementById('equipmentInput').value = '';
+    document.getElementById('customEquipmentInput').value = '';
+    document.getElementById('equipmentList').innerHTML =
+        '<p class="empty-state">No equipment added yet. Click "Choose Weapon" or add a custom item.</p>';
 
     // Reset step 5 form inputs
     document.getElementById('characterName').value = '';

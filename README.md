@@ -31,7 +31,8 @@ This project provides a complete design and implementation plan for building a c
 ### Enhanced Features (Planned)
 - ~~Finish the details (ex: Hi-Tech body armor stats mods)~~
 - ~~Generate a prompt for creating an image of your hero based on stats/powers~~
-- Random name generator
+- ~~Random name generator~~
+- Enhance equipment support (add items other than weapons)
 - Better character sheet
 
 ## 🎲 Game Rules Reference

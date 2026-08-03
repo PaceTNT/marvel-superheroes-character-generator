@@ -291,10 +291,25 @@
                         </div>
                     </div>
 
-                    <!-- 4E: Equipment (unchanged) -->
+                    <!-- 4E: Equipment -->
                     <div class="equipment-section hidden" id="equipmentSection">
                         <h4>Equipment</h4>
-                        <textarea id="equipmentInput" rows="2" placeholder="Enter equipment (one per line)"></textarea>
+
+                        <div class="equipment-buttons">
+                            <button id="chooseWeapon" class="btn btn-secondary btn-small" type="button">Choose Weapon</button>
+                        </div>
+
+                        <div class="form-group custom-equipment-input">
+                            <label>Add Custom Item</label>
+                            <div class="input-with-button">
+                                <input type="text" id="customEquipmentInput" placeholder="e.g., Grappling hook, Utility belt">
+                                <button type="button" class="btn-small" id="addCustomEquipment">Add</button>
+                            </div>
+                        </div>
+
+                        <div id="equipmentList" class="equipment-list">
+                            <p class="empty-state">No equipment added yet. Click "Choose Weapon" or add a custom item.</p>
+                        </div>
                     </div>
 
                     <div class="nav-buttons">
@@ -533,6 +548,7 @@
     <script src="js/data/talents.js"></script>
     <script src="js/data/talent-details.js"></script>
     <script src="js/data/contact-details.js"></script>
+    <script src="js/data/weapons.js"></script>
     <script src="js/data/names.js"></script>
     <script src="js/dice.js"></script>
     <script src="js/abilities.js"></script>

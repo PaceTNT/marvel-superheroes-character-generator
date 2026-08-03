@@ -89,6 +89,16 @@ function initializeEventListeners() {
     document.getElementById('chooseTalent')?.addEventListener('click', handleChooseTalent);
     document.getElementById('chooseContact')?.addEventListener('click', handleChooseContact);
 
+    // Equipment
+    document.getElementById('chooseWeapon')?.addEventListener('click', handleChooseWeapon);
+    document.getElementById('addCustomEquipment')?.addEventListener('click', handleAddCustomEquipment);
+    document.getElementById('customEquipmentInput')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleAddCustomEquipment();
+        }
+    });
+
     // Modal buttons
     document.getElementById('modalCancel')?.addEventListener('click', closeModal);
     document.getElementById('modalBack')?.addEventListener('click', handleModalBack);
@@ -869,6 +879,18 @@ function updateSummary() {
         html += '</ul>';
     }
 
+    // Equipment
+    if (currentCharacter.equipment && currentCharacter.equipment.length > 0) {
+        html += '<h4>Equipment</h4>';
+        html += '<ul style="font-size: 0.9em;">';
+        currentCharacter.equipment.forEach(item => {
+            const equipment = typeof item === 'string' ? { name: item } : item;
+            const priceText = equipment.source === 'weapon' ? ` (Price: ${equipment.price})` : '';
+            html += `<li>${equipment.name}${priceText}</li>`;
+        });
+        html += '</ul>';
+    }
+
     summary.innerHTML = html || '<p class="empty-state">Start creating your character...</p>';
 }
 
@@ -877,9 +899,6 @@ function generateCharacterSheet() {
     currentCharacter.name = document.getElementById('characterName').value;
     currentCharacter.realName = document.getElementById('realName').value;
     currentCharacter.backstory = document.getElementById('backstory').value;
-
-    // Equipment (still free-form)
-    currentCharacter.equipment = document.getElementById('equipmentInput').value.split('\n').filter(e => e.trim());
 
     // Image prompt options
     currentCharacter.genderAppearance = document.getElementById('genderAppearance').value;
@@ -973,7 +992,24 @@ function generateCharacterSheet() {
                 </table>
             </div>` : ''}
 
-        ${currentCharacter.equipment.length ? `<h4>Equipment</h4><ul>${currentCharacter.equipment.map(e => `<li>${e}</li>`).join('')}</ul>` : ''}
+        ${currentCharacter.equipment.length ? `
+        <h4>Equipment</h4>
+        <div class="sheet-equipment-summary">
+            <table>
+                <thead><tr><th>Name</th><th>Price</th><th>Range</th><th>Damage</th><th>Type</th><th>Rate</th><th>Shots</th><th>Material</th><th>Notes</th></tr></thead>
+                <tbody>
+                ${currentCharacter.equipment.map(item => {
+                    const equipment = typeof item === 'string' ? { name: item } : item;
+                    if (equipment.source === 'weapon') {
+                        const priceLabel = WEAPON_PRICE_LABELS[equipment.price] || equipment.price;
+                        const typeLabel = WEAPON_TYPE_LABELS[equipment.type] || equipment.type;
+                        return `<tr><td>${equipment.name}</td><td>${priceLabel} (${equipment.price})</td><td>${equipment.range}</td><td>${equipment.damage}</td><td>${typeLabel}</td><td>${equipment.rate}</td><td>${equipment.shots}</td><td>${equipment.material}</td><td>${equipment.notes || ''}</td></tr>`;
+                    }
+                    return `<tr><td>${equipment.name}</td><td colspan="8"><em>Custom item</em></td></tr>`;
+                }).join('')}
+                </tbody>
+            </table>
+        </div>` : ''}
 
         ${currentCharacter.backstory ? `<h4>Backstory</h4><p>${currentCharacter.backstory}</p>` : ''}
 
@@ -1050,13 +1086,15 @@ function updateUI() {
 
 // Modal state
 let modalState = {
-    mode: null, // 'category' | 'power' | 'talent-category' | 'talent-skill' | 'contact-category' | 'contact-type' | 'contact-name'
+    mode: null, // 'category' | 'power' | 'talent-category' | 'talent-skill' | 'contact-category' | 'contact-type' | 'contact-name' | 'weapon-category' | 'weapon'
     selectedCategory: null,
     selectedPower: null,
     selectedTalent: null,
     selectedContactType: null,
     selectedContactCategory: null,
-    context: null // 'power' | 'talent' | 'contact'
+    selectedWeaponCategory: null,
+    selectedWeapon: null,
+    context: null // 'power' | 'talent' | 'contact' | 'weapon'
 };
 
 /**
@@ -1144,7 +1182,8 @@ function handleRollAllocation() {
     renderContactsList();
 
     // Clear equipment
-    document.getElementById('equipmentInput').value = '';
+    currentCharacter.equipment = [];
+    renderEquipmentList();
 
     saveCharacterToLocalStorage();
 }
@@ -1308,6 +1347,8 @@ function handleModalBack() {
         showContactCategorySelection();
     } else if (modalState.mode === 'contact-name') {
         showContactTypeSelection(modalState.selectedContactCategory);
+    } else if (modalState.mode === 'weapon') {
+        showWeaponCategorySelection();
     }
 }
 
@@ -1379,6 +1420,23 @@ function handleModalConfirm() {
 
         addContactToCharacter(contact);
         closeModal();
+
+    } else if (modalState.mode === 'weapon' && modalState.selectedWeapon) {
+        const equipmentItem = {
+            name: modalState.selectedWeapon.name,
+            source: 'weapon',
+            price: modalState.selectedWeapon.price,
+            range: modalState.selectedWeapon.range,
+            damage: modalState.selectedWeapon.damage,
+            type: modalState.selectedWeapon.type,
+            rate: modalState.selectedWeapon.rate,
+            shots: modalState.selectedWeapon.shots,
+            material: modalState.selectedWeapon.material,
+            notes: modalState.selectedWeapon.notes
+        };
+
+        addEquipmentToCharacter(equipmentItem);
+        closeModal();
     }
 }
 
@@ -1394,6 +1452,8 @@ function closeModal() {
         selectedTalent: null,
         selectedContactType: null,
         selectedContactCategory: null,
+        selectedWeaponCategory: null,
+        selectedWeapon: null,
         context: null
     };
 }
@@ -2252,6 +2312,186 @@ function renderContactsList() {
     });
 
     contactsList.innerHTML = html;
+}
+
+/**
+ * Handle "Choose Weapon" button click
+ */
+function handleChooseWeapon() {
+    modalState.context = 'weapon';
+    modalState.mode = 'weapon-category';
+    modalState.selectedWeaponCategory = null;
+    modalState.selectedWeapon = null;
+
+    showWeaponCategorySelection();
+}
+
+/**
+ * Show weapon category selection in modal
+ */
+function showWeaponCategorySelection() {
+    const modal = document.getElementById('powerModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    const modalBack = document.getElementById('modalBack');
+    const modalConfirm = document.getElementById('modalConfirm');
+
+    modalState.mode = 'weapon-category';
+    modalTitle.textContent = 'Choose Weapon Category';
+    modalBack.classList.add('hidden');
+    modalConfirm.classList.add('hidden');
+
+    let html = '';
+    const categories = getAllWeaponCategories();
+    categories.forEach(categoryName => {
+        const count = getWeaponsInCategory(categoryName).length;
+        html += `
+            <div class="category-option" data-category="${categoryName}">
+                <div class="category-name">${categoryName}</div>
+                <div class="category-range">${count} weapons</div>
+            </div>
+        `;
+    });
+
+    modalBody.innerHTML = html;
+
+    document.querySelectorAll('.category-option').forEach(option => {
+        option.addEventListener('click', () => {
+            document.querySelectorAll('.category-option').forEach(opt => opt.classList.remove('selected'));
+            option.classList.add('selected');
+            modalState.selectedWeaponCategory = option.dataset.category;
+            showWeaponSelection(modalState.selectedWeaponCategory);
+        });
+    });
+
+    modal.classList.add('active');
+}
+
+/**
+ * Show weapon selection in modal for a specific category
+ */
+function showWeaponSelection(categoryName) {
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    const modalBack = document.getElementById('modalBack');
+    const modalConfirm = document.getElementById('modalConfirm');
+
+    modalState.mode = 'weapon';
+    modalTitle.textContent = `Choose Weapon: ${categoryName}`;
+    modalBack.classList.remove('hidden');
+    modalConfirm.classList.add('hidden');
+    modalConfirm.textContent = 'Add to Equipment';
+
+    const weapons = getWeaponsInCategory(categoryName);
+    let html = '';
+    weapons.forEach((weapon, index) => {
+        const priceLabel = WEAPON_PRICE_LABELS[weapon.price] || weapon.price;
+        const typeLabel = WEAPON_TYPE_LABELS[weapon.type] || weapon.type;
+        html += `
+            <div class="power-option" data-weapon-index="${index}">
+                <div class="power-option-name">${weapon.name} <span class="weapon-price-tag">Price: ${priceLabel} (${weapon.price})</span></div>
+                <div class="power-option-details">Range: ${weapon.range} | Damage: ${weapon.damage} (${typeLabel}) | Rate: ${weapon.rate} | Shots: ${weapon.shots} | Material: ${weapon.material}${weapon.notes ? ` | ${weapon.notes}` : ''}</div>
+            </div>
+        `;
+    });
+
+    modalBody.innerHTML = html;
+
+    document.querySelectorAll('.power-option').forEach(option => {
+        option.addEventListener('click', () => {
+            document.querySelectorAll('.power-option').forEach(opt => opt.classList.remove('selected'));
+            option.classList.add('selected');
+            const weaponIndex = parseInt(option.dataset.weaponIndex);
+            modalState.selectedWeapon = weapons[weaponIndex];
+            modalConfirm.classList.remove('hidden');
+        });
+    });
+}
+
+/**
+ * Handle "Add Custom Item" button click / Enter key
+ */
+function handleAddCustomEquipment() {
+    const input = document.getElementById('customEquipmentInput');
+    const name = input.value.trim();
+    if (!name) {
+        return;
+    }
+
+    addEquipmentToCharacter({ name, source: 'custom' });
+    input.value = '';
+    input.focus();
+}
+
+/**
+ * Add an equipment item (weapon or custom) to the character and update UI
+ */
+function addEquipmentToCharacter(item) {
+    currentCharacter.equipment.push(item);
+
+    renderEquipmentList();
+    updateSummary();
+    saveCharacterToLocalStorage();
+}
+
+/**
+ * Remove an equipment item from the character
+ */
+function removeEquipmentFromCharacter(index) {
+    showConfirmModal('Remove this equipment item?', 'Remove Equipment', () => {
+        currentCharacter.equipment.splice(index, 1);
+
+        renderEquipmentList();
+        updateSummary();
+        saveCharacterToLocalStorage();
+    });
+}
+
+/**
+ * Render the equipment list
+ */
+function renderEquipmentList() {
+    const equipmentList = document.getElementById('equipmentList');
+
+    if (!currentCharacter.equipment || currentCharacter.equipment.length === 0) {
+        equipmentList.innerHTML = '<p class="empty-state">No equipment added yet. Click "Choose Weapon" or add a custom item.</p>';
+        return;
+    }
+
+    let html = '';
+    currentCharacter.equipment.forEach((item, index) => {
+        // Legacy free-form entries were plain strings
+        const equipment = typeof item === 'string' ? { name: item, source: 'custom' } : item;
+
+        if (equipment.source === 'weapon') {
+            const priceLabel = WEAPON_PRICE_LABELS[equipment.price] || equipment.price;
+            const typeLabel = WEAPON_TYPE_LABELS[equipment.type] || equipment.type;
+            html += `
+                <div class="equipment-card">
+                    <div class="equipment-info">
+                        <div class="equipment-name">${equipment.name} <span class="weapon-price-tag">Price: ${priceLabel} (${equipment.price})</span></div>
+                        <div class="equipment-details">Range: ${equipment.range} | Damage: ${equipment.damage} (${typeLabel}) | Rate: ${equipment.rate} | Shots: ${equipment.shots} | Material: ${equipment.material}${equipment.notes ? ` | ${equipment.notes}` : ''}</div>
+                    </div>
+                    <div class="equipment-actions">
+                        <button class="btn btn-warning btn-small" onclick="removeEquipmentFromCharacter(${index})">Remove</button>
+                    </div>
+                </div>
+            `;
+        } else {
+            html += `
+                <div class="equipment-card">
+                    <div class="equipment-info">
+                        <div class="equipment-name">${equipment.name}</div>
+                    </div>
+                    <div class="equipment-actions">
+                        <button class="btn btn-warning btn-small" onclick="removeEquipmentFromCharacter(${index})">Remove</button>
+                    </div>
+                </div>
+            `;
+        }
+    });
+
+    equipmentList.innerHTML = html;
 }
 
 /**

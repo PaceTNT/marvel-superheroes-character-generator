@@ -35,8 +35,22 @@ function initializeEventListeners() {
         updateSummary();
     });
 
+    document.getElementById('randomizeCharacterName')?.addEventListener('click', () => {
+        const result = rollSuperheroName();
+        document.getElementById('characterName').value = result.name;
+        currentCharacter.name = result.name;
+        updateSummary();
+    });
+
     document.getElementById('realName')?.addEventListener('input', (e) => {
         currentCharacter.realName = e.target.value;
+        updateSummary();
+    });
+
+    document.getElementById('randomizeRealName')?.addEventListener('click', () => {
+        const result = rollMundaneName();
+        document.getElementById('realName').value = result.name;
+        currentCharacter.realName = result.name;
         updateSummary();
     });
 
@@ -2153,7 +2167,10 @@ function showContactNameInput() {
         <p style="margin-bottom: 15px;"><strong>Contact Type:</strong> ${modalState.selectedContactType} (${modalState.selectedContactCategory})</p>
         <div class="form-group" style="margin: 0;">
             <label>Contact Name</label>
-            <input type="text" id="contactNameInput" placeholder="e.g., Fred Duncan" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;">
+            <div class="input-with-button">
+                <input type="text" id="contactNameInput" placeholder="e.g., Fred Duncan" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;">
+                <button type="button" class="btn-small" id="randomizeContactName" title="Generate random name">🎲</button>
+            </div>
         </div>
     `;
 
@@ -2166,6 +2183,13 @@ function showContactNameInput() {
         if (e.key === 'Enter' && input.value.trim()) {
             handleModalConfirm();
         }
+    });
+
+    // Randomize button
+    document.getElementById('randomizeContactName').addEventListener('click', () => {
+        const result = rollMundaneName();
+        input.value = result.name;
+        input.focus();
     });
 }
 

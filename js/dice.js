@@ -7,6 +7,28 @@ function rollD10() {
     return Math.floor(Math.random() * 10) + 1;
 }
 
+function rollSuperheroName() {
+    const adjective = getRandomSuperheroAdjective();
+    let noun = getRandomSuperheroNoun();
+
+    let attempts = 0;
+    while (noun.toLowerCase() === adjective.toLowerCase() && attempts < 5) {
+        noun = getRandomSuperheroNoun();
+        attempts++;
+    }
+
+    const prefixed = rollD100() <= 33;
+    const name = prefixed ? `The ${adjective} ${noun}` : `${adjective} ${noun}`;
+
+    return { adjective, noun, prefixed, name };
+}
+
+function rollMundaneName() {
+    const firstName = getRandomFirstName();
+    const lastName = getRandomLastName();
+    return { firstName, lastName, name: `${firstName} ${lastName}` };
+}
+
 function rollOrigin() {
     const roll = rollD100();
     let origin;

@@ -446,6 +446,27 @@ header h2 {
     margin-bottom: 30px;
 }
 
+.allocation-roll-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 12px;
+}
+
+.allocation-roll-item .result-box {
+    display: inline-block;
+    margin: 0;
+    padding: 10px 16px;
+}
+
+@media (max-width: 768px) {
+    .allocation-roll-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}
+
 .powers-section,
 .talents-section,
 .contacts-section,

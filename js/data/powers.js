@@ -3,7 +3,8 @@
 
 const POWERS_DATA = {
   // Powers, Talents, and Contacts Allocation Table
-  // Roll d100 once to determine initial and maximum counts for all three
+  // Roll d100 separately for each of Powers, Talents, and Contacts;
+  // each roll is looked up against this same table for its own initial/maximum counts
   allocationTable: [
     {
       roll: [1, 20],

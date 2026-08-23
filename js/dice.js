@@ -57,19 +57,47 @@ function rollAbility(origin) {
 // Powers, Talents, and Contacts Rolling Functions
 
 /**
- * Roll for powers/talents/contacts allocation
- * Single d100 roll determines initial and maximum counts for all three
- * @returns {object} - { roll, powers: {initial, max}, talents: {initial, max}, contacts: {initial, max} }
+ * Roll for Powers allocation
+ * @returns {object} - { roll, initial, max }
  */
-function rollAllocation() {
+function rollPowersAllocation() {
     const roll = rollD100();
     const allocation = getAllocationFromRoll(roll);
 
     return {
         roll: roll,
-        powers: allocation.powers,
-        talents: allocation.talents,
-        contacts: allocation.contacts
+        initial: allocation.powers.initial,
+        max: allocation.powers.max
+    };
+}
+
+/**
+ * Roll for Talents allocation
+ * @returns {object} - { roll, initial, max }
+ */
+function rollTalentsAllocation() {
+    const roll = rollD100();
+    const allocation = getAllocationFromRoll(roll);
+
+    return {
+        roll: roll,
+        initial: allocation.talents.initial,
+        max: allocation.talents.max
+    };
+}
+
+/**
+ * Roll for Contacts allocation
+ * @returns {object} - { roll, initial, max }
+ */
+function rollContactsAllocation() {
+    const roll = rollD100();
+    const allocation = getAllocationFromRoll(roll);
+
+    return {
+        roll: roll,
+        initial: allocation.contacts.initial,
+        max: allocation.contacts.max
     };
 }
 

@@ -77,7 +77,9 @@ function initializeEventListeners() {
     });
 
     // Powers, Talents, Contacts
-    document.getElementById('rollAllocation')?.addEventListener('click', handleRollAllocation);
+    document.getElementById('rollPowersAllocation')?.addEventListener('click', handleRollPowersAllocation);
+    document.getElementById('rollTalentsAllocation')?.addEventListener('click', handleRollTalentsAllocation);
+    document.getElementById('rollContactsAllocation')?.addEventListener('click', handleRollContactsAllocation);
     document.getElementById('rollRandomPower')?.addEventListener('click', handleRollRandomPower);
     document.getElementById('choosePower')?.addEventListener('click', handleChoosePower);
     document.getElementById('confirmSpecialAbilities')?.addEventListener('click', () => {
@@ -1098,15 +1100,48 @@ let modalState = {
 };
 
 /**
- * Handle allocation roll for powers/talents/contacts
+ * Reveal the Equipment section and Continue button once Powers, Talents,
+ * and Contacts have each been rolled at least once.
  */
-function handleRollAllocation() {
-    const result = rollAllocation();
+function checkAllAllocationsRolled() {
+    const allRolled = currentCharacter.powerDetails.roll !== null &&
+        currentCharacter.talentDetails.roll !== null &&
+        currentCharacter.contactDetails.roll !== null;
 
-    // Update character data
+    if (allRolled) {
+        document.getElementById('equipmentSection').classList.remove('hidden');
+        document.getElementById('confirmSpecialAbilities').classList.remove('hidden');
+    }
+}
+
+/**
+ * Shared post-roll bookkeeping: recalculate resources (accounting for
+ * purchases still held by the other two categories), refresh the purchase
+ * section, and persist.
+ */
+function finishAllocationRoll() {
+    recalculateResources();
+
+    if (currentCharacter.secondaryAbilities.baseResources) {
+        document.getElementById('purchaseSection').classList.remove('hidden');
+        updatePurchaseSection();
+    }
+
+    updateResourcesValueDisplay();
+    updateSummary();
+    checkAllAllocationsRolled();
+    saveCharacterToLocalStorage();
+}
+
+/**
+ * Handle allocation roll for Powers
+ */
+function handleRollPowersAllocation() {
+    const result = rollPowersAllocation();
+
     currentCharacter.powerDetails.roll = result.roll;
-    currentCharacter.powerDetails.initial = result.powers.initial;
-    currentCharacter.powerDetails.max = result.powers.max;
+    currentCharacter.powerDetails.initial = result.initial;
+    currentCharacter.powerDetails.max = result.max;
     currentCharacter.powerDetails.purchased = 0;
     currentCharacter.powerDetails.current = 0;
     currentCharacter.powerDetails.list = []; // Clear existing powers
@@ -1116,15 +1151,57 @@ function handleRollAllocation() {
         revertBattlesuit();
     }
 
+    document.getElementById('powersAllocationRoll').textContent = result.roll;
+    document.getElementById('powersInitial').textContent = result.initial;
+    document.getElementById('powersMax').textContent = result.max;
+    document.getElementById('powerSlotsInitial').textContent = result.initial;
+    document.getElementById('powerSlotsMax').textContent = result.max;
+
+    document.getElementById('powersAllocationResult').classList.remove('hidden');
+    document.getElementById('powersSection').classList.remove('hidden');
+
+    updatePowerSlotsDisplay();
+    renderPowersList();
+
+    finishAllocationRoll();
+}
+
+/**
+ * Handle allocation roll for Talents
+ */
+function handleRollTalentsAllocation() {
+    const result = rollTalentsAllocation();
+
     currentCharacter.talentDetails.roll = result.roll;
-    currentCharacter.talentDetails.initial = result.talents.initial;
-    currentCharacter.talentDetails.max = result.talents.max;
+    currentCharacter.talentDetails.initial = result.initial;
+    currentCharacter.talentDetails.max = result.max;
     currentCharacter.talentDetails.purchased = 0;
     currentCharacter.talentDetails.list = []; // Clear existing talents
 
+    document.getElementById('talentsAllocationRoll').textContent = result.roll;
+    document.getElementById('talentsInitial').textContent = result.initial;
+    document.getElementById('talentsMax').textContent = result.max;
+    document.getElementById('talentSlotsInitial').textContent = result.initial;
+    document.getElementById('talentSlotsMax').textContent = result.max;
+
+    document.getElementById('talentsAllocationResult').classList.remove('hidden');
+    document.getElementById('talentsSection').classList.remove('hidden');
+
+    updateTalentSlotsDisplay();
+    renderTalentsList();
+
+    finishAllocationRoll();
+}
+
+/**
+ * Handle allocation roll for Contacts
+ */
+function handleRollContactsAllocation() {
+    const result = rollContactsAllocation();
+
     currentCharacter.contactDetails.roll = result.roll;
-    currentCharacter.contactDetails.initial = result.contacts.initial;
-    currentCharacter.contactDetails.max = result.contacts.max;
+    currentCharacter.contactDetails.initial = result.initial;
+    currentCharacter.contactDetails.max = result.max;
     currentCharacter.contactDetails.purchased = 0;
     currentCharacter.contactDetails.list = []; // Clear existing contacts
 
@@ -1134,58 +1211,19 @@ function handleRollAllocation() {
         currentCharacter.contactDetails.initial = Math.min(currentCharacter.contactDetails.initial, 1);
     }
 
-    // Reset resources to base (undo any previous purchases)
-    if (currentCharacter.secondaryAbilities.baseResources) {
-        const base = currentCharacter.secondaryAbilities.baseResources;
-        currentCharacter.secondaryAbilities.resources = { rank: base.rank, value: base.value };
-    }
-
-    // Update UI
-    document.getElementById('allocationRoll').textContent = result.roll;
-    document.getElementById('powersInitial').textContent = currentCharacter.powerDetails.initial;
-    document.getElementById('powersMax').textContent = currentCharacter.powerDetails.max;
-    document.getElementById('talentsInitial').textContent = currentCharacter.talentDetails.initial;
-    document.getElementById('talentsMax').textContent = currentCharacter.talentDetails.max;
+    document.getElementById('contactsAllocationRoll').textContent = result.roll;
     document.getElementById('contactsInitial').textContent = currentCharacter.contactDetails.initial;
     document.getElementById('contactsMax').textContent = currentCharacter.contactDetails.max;
-
-    // Also update the counters in each section
-    document.getElementById('powerSlotsInitial').textContent = currentCharacter.powerDetails.initial;
-    document.getElementById('powerSlotsMax').textContent = currentCharacter.powerDetails.max;
-    document.getElementById('talentSlotsInitial').textContent = currentCharacter.talentDetails.initial;
-    document.getElementById('talentSlotsMax').textContent = currentCharacter.talentDetails.max;
     document.getElementById('contactSlotsInitial').textContent = currentCharacter.contactDetails.initial;
     document.getElementById('contactSlotsMax').textContent = currentCharacter.contactDetails.max;
 
-    // Show result box and sections
-    document.getElementById('allocationResult').classList.remove('hidden');
-    document.getElementById('powersSection').classList.remove('hidden');
-    document.getElementById('talentsSection').classList.remove('hidden');
+    document.getElementById('contactsAllocationResult').classList.remove('hidden');
     document.getElementById('contactsSection').classList.remove('hidden');
-    document.getElementById('equipmentSection').classList.remove('hidden');
-    document.getElementById('confirmSpecialAbilities').classList.remove('hidden');
 
-    // Show purchasing section if resources have been set
-    if (currentCharacter.secondaryAbilities.baseResources) {
-        document.getElementById('purchaseSection').classList.remove('hidden');
-        updatePurchaseSection();
-    }
-
-    // Update slots displays
-    updatePowerSlotsDisplay();
-    updateTalentSlotsDisplay();
     updateContactSlotsDisplay();
-
-    // Clear and render lists
-    renderPowersList();
-    renderTalentsList();
     renderContactsList();
 
-    // Clear equipment
-    currentCharacter.equipment = [];
-    renderEquipmentList();
-
-    saveCharacterToLocalStorage();
+    finishAllocationRoll();
 }
 
 /**

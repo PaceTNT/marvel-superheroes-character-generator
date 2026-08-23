@@ -198,15 +198,25 @@
                 <div id="step4" class="step-panel">
                     <h3>Step 4: Special Abilities</h3>
 
-                    <!-- 4A: Allocation Roll -->
+                    <!-- 4A: Allocation Rolls -->
                     <div class="allocation-section">
-                        <button id="rollAllocation" class="btn btn-primary">🎲 Roll for Powers, Talents & Contacts</button>
-
-                        <div id="allocationResult" class="result-box hidden">
-                            <h4>🎲 Rolled: <span id="allocationRoll">-</span></h4>
-                            <p><strong>Powers:</strong> <span id="powersInitial">-</span> initial / <span id="powersMax">-</span> maximum</p>
-                            <p><strong>Talents:</strong> <span id="talentsInitial">-</span> initial / <span id="talentsMax">-</span> maximum</p>
-                            <p><strong>Contacts:</strong> <span id="contactsInitial">-</span> initial / <span id="contactsMax">-</span> maximum</p>
+                        <div class="allocation-roll-item">
+                            <button id="rollPowersAllocation" class="btn btn-primary btn-small">🎲 Roll for Powers</button>
+                            <span id="powersAllocationResult" class="result-box hidden">
+                                Rolled <span id="powersAllocationRoll">-</span>: <span id="powersInitial">-</span> initial / <span id="powersMax">-</span> maximum
+                            </span>
+                        </div>
+                        <div class="allocation-roll-item">
+                            <button id="rollTalentsAllocation" class="btn btn-primary btn-small">🎲 Roll for Talents</button>
+                            <span id="talentsAllocationResult" class="result-box hidden">
+                                Rolled <span id="talentsAllocationRoll">-</span>: <span id="talentsInitial">-</span> initial / <span id="talentsMax">-</span> maximum
+                            </span>
+                        </div>
+                        <div class="allocation-roll-item">
+                            <button id="rollContactsAllocation" class="btn btn-primary btn-small">🎲 Roll for Contacts</button>
+                            <span id="contactsAllocationResult" class="result-box hidden">
+                                Rolled <span id="contactsAllocationRoll">-</span>: <span id="contactsInitial">-</span> initial / <span id="contactsMax">-</span> maximum
+                            </span>
                         </div>
                     </div>
 

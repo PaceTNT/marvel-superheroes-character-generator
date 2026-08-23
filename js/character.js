@@ -208,7 +208,9 @@ function resetAllUI() {
     document.getElementById('resourcesInfo').textContent = '';
 
     // Reset step 4 sections
-    document.getElementById('allocationResult').classList.add('hidden');
+    document.getElementById('powersAllocationResult').classList.add('hidden');
+    document.getElementById('talentsAllocationResult').classList.add('hidden');
+    document.getElementById('contactsAllocationResult').classList.add('hidden');
     document.getElementById('purchaseSection').classList.add('hidden');
     document.getElementById('powersSection').classList.add('hidden');
     document.getElementById('talentsSection').classList.add('hidden');

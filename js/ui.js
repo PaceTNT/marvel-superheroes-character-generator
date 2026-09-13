@@ -123,6 +123,12 @@ function initializeEventListeners() {
     document.getElementById('modifyRankModalCancel')?.addEventListener('click', hideModifyRankModal);
     document.getElementById('modifyRankModalConfirm')?.addEventListener('click', confirmModifyRank);
 
+    // Import Character
+    document.getElementById('importCharacterBtn')?.addEventListener('click', () => {
+        document.getElementById('importCharacterInput').click();
+    });
+    document.getElementById('importCharacterInput')?.addEventListener('change', handleImportCharacterFile);
+
     // Start Over
     document.getElementById('startOverBtn')?.addEventListener('click', showStartOverModal);
     document.getElementById('startOverCancel')?.addEventListener('click', hideStartOverModal);
@@ -1075,6 +1081,147 @@ function exportJSON() {
 
 function printCharacter() {
     window.print();
+}
+
+/**
+ * Handle the file picker's change event for importing a character JSON file.
+ */
+function handleImportCharacterFile(event) {
+    const file = event.target.files[0];
+    event.target.value = ''; // allow re-selecting the same file later
+
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        let data;
+        try {
+            data = JSON.parse(e.target.result);
+        } catch (err) {
+            showAlertModal('That file is not valid JSON.', 'Import Failed');
+            return;
+        }
+        importCharacter(data);
+    };
+    reader.onerror = () => {
+        showAlertModal('Could not read the selected file.', 'Import Failed');
+    };
+    reader.readAsText(file);
+}
+
+/**
+ * Rebuild the entire UI (all steps) from currentCharacter after an import.
+ * Assumes currentCharacter has already been migrated to the current format.
+ */
+function restoreCharacterUI() {
+    resetAllUI();
+
+    const c = currentCharacter;
+
+    // Step 1: Origin
+    if (c.origin) {
+        document.querySelectorAll('.origin-card').forEach(card => {
+            card.classList.toggle('selected', card.dataset.origin === c.origin);
+        });
+        const originData = ORIGINS_DATA[c.origin];
+        if (originData) {
+            document.getElementById('originResult').innerHTML = `
+                <h4>${c.origin}</h4>
+                <p>${originData.description}</p>
+                <p><em>Examples: ${originData.examples}</em></p>
+                <p><strong>Modifiers:</strong></p>
+                <ul>
+                    ${Object.entries(originData.modifiers).map(([key, value]) =>
+                        `<li>${key}: ${value}</li>`
+                    ).join('')}
+                </ul>
+            `;
+            document.getElementById('originResult').classList.remove('hidden');
+        }
+        document.getElementById('confirmOrigin').classList.remove('hidden');
+    }
+
+    // Step 2: Primary Abilities
+    let abilitiesRolled = false;
+    Object.entries(c.primaryAbilities || {}).forEach(([key, ability]) => {
+        if (!ability) return;
+        const row = document.querySelector(`tr[data-ability="${key}"]`);
+        if (!row) return;
+        abilitiesRolled = true;
+        row.querySelector('.roll-result').textContent = ability.roll ?? '-';
+        row.querySelector('.rank-result').textContent = ability.rank ?? '-';
+        row.querySelector('.value-result').textContent = ability.value ?? '-';
+    });
+    if (abilitiesRolled) {
+        document.getElementById('confirmAbilities').classList.remove('hidden');
+        showAlteredHumanBoostSelector();
+    }
+
+    // Step 3: Secondary Abilities (health/karma/resources/popularity)
+    if (c.secondaryAbilities) {
+        document.getElementById('healthValue').textContent = c.secondaryAbilities.health || 0;
+        document.getElementById('karmaValue').textContent = c.secondaryAbilities.karma || 0;
+
+        if (c.origin) {
+            setupResourcesUI();
+            setupPopularityUI();
+        }
+        if (c.secondaryAbilities.resources) {
+            updateResourcesValueDisplay();
+        }
+    }
+
+    // Step 4: Powers / Talents / Contacts allocations
+    if (c.powerDetails && c.powerDetails.roll !== null) {
+        document.getElementById('powersAllocationRoll').textContent = c.powerDetails.roll;
+        document.getElementById('powersInitial').textContent = c.powerDetails.initial;
+        document.getElementById('powersMax').textContent = c.powerDetails.max;
+        document.getElementById('powersAllocationResult').classList.remove('hidden');
+        document.getElementById('powersSection').classList.remove('hidden');
+    }
+    if (c.talentDetails && c.talentDetails.roll !== null) {
+        document.getElementById('talentsAllocationRoll').textContent = c.talentDetails.roll;
+        document.getElementById('talentsInitial').textContent = c.talentDetails.initial;
+        document.getElementById('talentsMax').textContent = c.talentDetails.max;
+        document.getElementById('talentsAllocationResult').classList.remove('hidden');
+        document.getElementById('talentsSection').classList.remove('hidden');
+    }
+    if (c.contactDetails && c.contactDetails.roll !== null) {
+        document.getElementById('contactsAllocationRoll').textContent = c.contactDetails.roll;
+        document.getElementById('contactsInitial').textContent = c.contactDetails.initial;
+        document.getElementById('contactsMax').textContent = c.contactDetails.max;
+        document.getElementById('contactsAllocationResult').classList.remove('hidden');
+        document.getElementById('contactsSection').classList.remove('hidden');
+    }
+
+    updatePowerSlotsDisplay();
+    renderPowersList();
+    updateTalentSlotsDisplay();
+    renderTalentsList();
+    updateContactSlotsDisplay();
+    renderContactsList();
+    document.getElementById('equipmentSection').classList.remove('hidden');
+    renderEquipmentList();
+
+    if (c.secondaryAbilities && c.secondaryAbilities.baseResources) {
+        document.getElementById('purchaseSection').classList.remove('hidden');
+        updatePurchaseSection();
+    }
+
+    checkAllAllocationsRolled();
+
+    // Step 5: Character Details
+    document.getElementById('characterName').value = c.name || '';
+    document.getElementById('realName').value = c.realName || '';
+    document.getElementById('backstory').value = c.backstory || '';
+    document.getElementById('genderAppearance').value = c.genderAppearance || 'Androgynous';
+    document.getElementById('primarySuitColor').value = c.primarySuitColor || '#ED1D24';
+    document.getElementById('primaryColorLabel').textContent = c.primarySuitColor || '#ED1D24';
+    document.getElementById('secondarySuitColor').value = c.secondarySuitColor || '#1E3A5F';
+    document.getElementById('secondaryColorLabel').textContent = c.secondarySuitColor || '#1E3A5F';
+
+    generateCharacterSheet();
+    showStep(5);
 }
 
 function updateUI() {

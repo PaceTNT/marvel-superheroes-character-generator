@@ -263,6 +263,27 @@ function loadCharacterFromLocalStorage() {
 }
 
 /**
+ * Import a character previously exported via exportJSON().
+ * Validates the shape, migrates old formats, and restores the full UI.
+ */
+function importCharacter(data) {
+    const requiredAbilities = ['fighting', 'agility', 'strength', 'endurance', 'reason', 'intuition', 'psyche'];
+    const hasAllAbilities = !!data && !!data.primaryAbilities &&
+        requiredAbilities.every(key => !!data.primaryAbilities[key]);
+
+    if (!data || typeof data !== 'object' || Array.isArray(data) || !data.origin || !hasAllAbilities) {
+        showAlertModal('This file does not look like a valid, fully-generated character JSON export.', 'Import Failed');
+        return;
+    }
+
+    currentCharacter = data;
+    migrateCharacterFormat();
+
+    currentStep = 5;
+    restoreCharacterUI();
+}
+
+/**
  * Migrate old character format to new format
  * Handles backward compatibility with characters created before power details were added
  */

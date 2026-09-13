@@ -950,9 +950,31 @@ const POWER_DETAILS_DATA = {
     ]
   },
   "Flight": {
-    "description": "The hero with this Power can move through the air under his own power. The method of flight (wings, rockets, unconscious graviton manipulation, etc.) is left for the player to define, though it should be defined before play begins. The character's speed is determined by the Power rank of the individual. Agility is used to determine actions while flying, including changing course and dodging.",
+    "description": "The hero with this Power can move through the air under his own power. The method of flight (wings, rockets, unconscious graviton manipulation, etc.) is left for the player to define, though it should be defined before play begins. The character's speed is determined by the Power rank of the individual. Agility is used to determine actions while flying, including changing course and dodging.<br><br><strong>Acceleration:</strong> A flying character cannot reach their maximum speed in a single round, unless that's character's Powers specifically permit it. The first round of flight, the character can move a number of areas as limited by their Endurance (Feeble = 1, Poor to Excellent = 2, Remarkable+ = 3), per the \"Ranged Movement\" rules on pg. 20. The speed can be increased by that increment each round until the maximum is reached.<br><br><strong>Deceleration:</strong> Halve current speed per-round, rounding fractions up. At zero, may fall (or hover, if their powers permit it).<br><br><strong>Landing:</strong> If moving faster than 3 areas per round, must make an Agility FEAT. Failure indicates a Slam result.<br><br><strong>Turns:</strong> Any turn of 90 degrees or more requires an Agility FEAT. Failure means they continue in the original direction. This also applies to pulling out of a dive.",
     "example": "A hero who can fly 10 areas may climb 30 stories in a single round.",
-    "notes": "Winds (including wind Powers) of greater Intensity than the hero's Power rank will cause the hero to lose altitude. The hero may gain one additional area (44 yards) for each 15 feet (1 story) dropped, and is slowed by one area of speed for each 30 feet (two stories) climbed."
+    "notes": "Winds (including wind Powers) of greater Intensity than the hero's Power rank will cause the hero to lose altitude. The hero may gain one additional area (44 yards) for each 15 feet (1 story) dropped, and is slowed by one area of speed for each 30 feet (two stories) climbed.",
+    "table": {
+      "title": "Flight Speeds by Power Rank",
+      "columns": ["Power Rank", "Areas / Round", "MPH"],
+      "rows": [
+        ["Feeble", "2", "30"],
+        ["Poor", "4", "60"],
+        ["Typical", "6", "90"],
+        ["Good", "8", "120"],
+        ["Excellent", "10", "150"],
+        ["Remarkable", "15", "225"],
+        ["Incredible", "20", "300"],
+        ["Amazing", "25", "375"],
+        ["Monstrous", "30", "450"],
+        ["Unearthly", "40", "600"],
+        ["Shift X", "50", "750"],
+        ["Shift Y", "100", "1500"],
+        ["Shift Z", "200", "3750"],
+        ["Class 1000", "Interplanetary", "—"],
+        ["Class 3000", "Near-Light", "—"],
+        ["Class 5000", "Teleportation", "—"]
+      ]
+    }
   },
   "Gliding": {
     "description": "The hero has the ability to glide, dropping 1 story (15 feet) for every turn in the air. The distance covered per turn is set by the Power rank as for flying. The Gliding hero cannot climb, but can maintain level flight by making an Agility FEAT (failure indicates loss of 2 stories / 30 feet).",

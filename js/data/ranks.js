@@ -53,6 +53,24 @@ function getRankValue(rankName) {
     return rank ? rank.value : 5;
 }
 
+/**
+ * Find the rank name whose threshold a raw numeric value falls into.
+ * Used when an ability's value is adjusted by a flat amount (e.g. Raise
+ * Lowest Ability's +20) rather than by rank steps, since the result may
+ * not land exactly on a table value.
+ */
+function getRankNameFromValue(value) {
+    let result = RANKS_DATA.ranks[0].name;
+    for (const rank of RANKS_DATA.ranks) {
+        if (value >= rank.value) {
+            result = rank.name;
+        } else {
+            break;
+        }
+    }
+    return result;
+}
+
 // Ability Modifier Table - used for Resources and optional ability adjustments
 const ABILITY_MODIFIER_TABLE = [
     { roll: [1, 15], modifier: -1, description: "Reduce by one rank" },

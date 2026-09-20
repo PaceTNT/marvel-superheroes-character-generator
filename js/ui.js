@@ -1681,9 +1681,137 @@ function addPowerWithPrompts(power) {
             addPowerToCharacter(power);
             offerBonusPower(power);
         });
+    } else if (power.name === 'Raise Lowest Ability') {
+        addPowerToCharacter(power);
+        applyRaiseLowestAbility(power);
+        offerBonusPower(power);
     } else {
         addPowerToCharacter(power);
         offerBonusPower(power);
+    }
+}
+
+/**
+ * Apply the "Raise Lowest Ability" power effect: raises the character's
+ * lowest primary ability by 20 points. If more than one ability is tied
+ * for lowest, the hero chooses which one (per the rulebook).
+ */
+function applyRaiseLowestAbility(power) {
+    const lowestKeys = findLowestPrimaryAbilities(currentCharacter.primaryAbilities);
+
+    const apply = (abilityKey) => {
+        const { previous, current } = raisePrimaryAbilityByPoints(
+            currentCharacter.primaryAbilities, abilityKey, 20
+        );
+
+        power.raisedAbility = abilityKey;
+        power.previousRank = previous.rank;
+        power.previousValue = previous.value;
+
+        updateSecondaryAbilities();
+
+        // Reflect the change on the Step 2 abilities table, if present
+        const row = document.querySelector(`tr[data-ability="${abilityKey}"]`);
+        if (row) {
+            row.querySelector('.rank-result').textContent = current.rank;
+            row.querySelector('.value-result').textContent = current.value;
+        }
+
+        renderPowersList();
+        updateSummary();
+        saveCharacterToLocalStorage();
+
+        const label = abilityKey.charAt(0).toUpperCase() + abilityKey.slice(1);
+        showAlertModal(
+            `${label} raised from ${previous.rank} (${previous.value}) to ${current.rank} (${current.value}).`,
+            'Raise Lowest Ability'
+        );
+    };
+
+    if (lowestKeys.length === 1) {
+        apply(lowestKeys[0]);
+    } else {
+        showRaiseLowestAbilitySelection(lowestKeys, apply);
+    }
+}
+
+/**
+ * Show a modal letting the hero pick which tied-lowest ability to raise.
+ */
+function showRaiseLowestAbilitySelection(abilityKeys, onSelect) {
+    const modal = document.getElementById('bonusPowerModal');
+    const title = document.getElementById('bonusPowerModalTitle');
+    const body = document.getElementById('bonusPowerModalBody');
+    const oldConfirm = document.getElementById('bonusPowerModalConfirm');
+    const oldCancel = document.getElementById('bonusPowerModalCancel');
+
+    title.textContent = 'Raise Lowest Ability - Choose One';
+
+    let html = '<div class="power-detail-section">';
+    html += '<p>These abilities are tied for lowest. Choose which one to raise by 20 points:</p>';
+    html += '</div>';
+    html += '<div class="bonus-power-options">';
+    abilityKeys.forEach((key, index) => {
+        const ability = currentCharacter.primaryAbilities[key];
+        const label = key.charAt(0).toUpperCase() + key.slice(1);
+        html += `
+            <div class="bonus-power-option" data-index="${index}">
+                <div class="bonus-power-option-name">${label}: ${ability.rank} (${ability.value})</div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    body.innerHTML = html;
+
+    // Clone buttons to remove old listeners, then configure
+    const confirmBtn = oldConfirm.cloneNode(true);
+    const cancelBtn = oldCancel.cloneNode(true);
+    oldConfirm.parentNode.replaceChild(confirmBtn, oldConfirm);
+    oldCancel.parentNode.replaceChild(cancelBtn, oldCancel);
+
+    confirmBtn.textContent = 'Select';
+    confirmBtn.classList.add('hidden');
+    // No decline option: the rulebook requires choosing one of the tied abilities
+    cancelBtn.classList.add('hidden');
+
+    let selectedIndex = null;
+
+    body.querySelectorAll('.bonus-power-option').forEach(option => {
+        option.addEventListener('click', () => {
+            body.querySelectorAll('.bonus-power-option').forEach(o => o.classList.remove('selected'));
+            option.classList.add('selected');
+            selectedIndex = parseInt(option.dataset.index);
+            confirmBtn.classList.remove('hidden');
+        });
+    });
+
+    confirmBtn.addEventListener('click', () => {
+        if (selectedIndex !== null) {
+            modal.classList.remove('active');
+            onSelect(abilityKeys[selectedIndex]);
+        }
+    });
+
+    modal.classList.add('active');
+}
+
+/**
+ * Revert a previously-applied Raise Lowest Ability effect (used when the
+ * power is removed from the character).
+ */
+function revertRaiseLowestAbility(power) {
+    const ability = currentCharacter.primaryAbilities[power.raisedAbility];
+    if (!ability) return;
+
+    ability.rank = power.previousRank;
+    ability.value = power.previousValue;
+
+    updateSecondaryAbilities();
+
+    const row = document.querySelector(`tr[data-ability="${power.raisedAbility}"]`);
+    if (row) {
+        row.querySelector('.rank-result').textContent = ability.rank;
+        row.querySelector('.value-result').textContent = ability.value;
     }
 }
 
@@ -2011,14 +2139,25 @@ function showDetectionPowerSelection(mainPowerName, onSelect) {
 function removePowerFromCharacter(index) {
     const power = currentCharacter.powerDetails.list[index];
     const isBattlesuitArmor = power && power.name === 'Body Armor' && currentCharacter.battlesuit;
+    const isRaiseLowestAbility = power && power.name === 'Raise Lowest Ability' && power.raisedAbility;
+    const raisedLabel = isRaiseLowestAbility
+        ? power.raisedAbility.charAt(0).toUpperCase() + power.raisedAbility.slice(1)
+        : null;
     const confirmMsg = isBattlesuitArmor
         ? 'Remove Body Armor? This will also remove your battle-suit and revert FASE bonuses.'
-        : 'Remove this power?';
+        : isRaiseLowestAbility
+            ? `Remove this power? This will revert ${raisedLabel} back to ${power.previousRank} (${power.previousValue}).`
+            : 'Remove this power?';
 
     showConfirmModal(confirmMsg, 'Remove Power', () => {
         // Revert battlesuit if removing Body Armor
         if (isBattlesuitArmor) {
             revertBattlesuit();
+        }
+
+        // Revert the ability boost if removing Raise Lowest Ability
+        if (isRaiseLowestAbility) {
+            revertRaiseLowestAbility(power);
         }
 
         currentCharacter.powerDetails.list.splice(index, 1);
@@ -2057,7 +2196,9 @@ function renderPowersList() {
             : (hasBattlesuit ? ' <span class="battlesuit-equipped-tag">[In Suit]</span>' : '');
         const subtypeTag = power.subtype
             ? ` <span class="power-subtype-tag">(${power.subtype})</span>`
-            : '';
+            : (power.raisedAbility
+                ? ` <span class="power-subtype-tag">(${power.raisedAbility.charAt(0).toUpperCase() + power.raisedAbility.slice(1)} +20)</span>`
+                : '');
         const bonusTag = power.isBonusPower
             ? ' <span class="bonus-power-indicator">BONUS</span>'
             : '';

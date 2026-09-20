@@ -50,6 +50,41 @@ function calculatePopularity(character) {
     }
 }
 
+const PRIMARY_ABILITY_KEYS = ['fighting', 'agility', 'strength', 'endurance', 'reason', 'intuition', 'psyche'];
+
+/**
+ * Find which primary ability key(s) currently have the lowest value.
+ * Returns more than one key when tied.
+ */
+function findLowestPrimaryAbilities(primaryAbilities) {
+    let minValue = Infinity;
+    PRIMARY_ABILITY_KEYS.forEach(key => {
+        const ability = primaryAbilities[key];
+        if (ability && ability.value < minValue) {
+            minValue = ability.value;
+        }
+    });
+
+    return PRIMARY_ABILITY_KEYS.filter(key =>
+        primaryAbilities[key] && primaryAbilities[key].value === minValue
+    );
+}
+
+/**
+ * Raise a single primary ability's value by a flat number of points
+ * (e.g. the Raise Lowest Ability power's +20), updating its rank name
+ * to match the new value.
+ */
+function raisePrimaryAbilityByPoints(primaryAbilities, abilityKey, points) {
+    const ability = primaryAbilities[abilityKey];
+    const previous = { rank: ability.rank, value: ability.value };
+
+    ability.value = ability.value + points;
+    ability.rank = getRankNameFromValue(ability.value);
+
+    return { previous, current: { rank: ability.rank, value: ability.value } };
+}
+
 function applyOriginModifiers(character) {
     const origin = character.origin;
 

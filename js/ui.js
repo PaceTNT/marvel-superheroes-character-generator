@@ -94,6 +94,7 @@ function initializeEventListeners() {
     // Equipment
     document.getElementById('chooseWeapon')?.addEventListener('click', handleChooseWeapon);
     document.getElementById('chooseOtherStuff')?.addEventListener('click', handleChooseOtherStuff);
+    document.getElementById('chooseLandVehicle')?.addEventListener('click', handleChooseLandVehicle);
     document.getElementById('addCustomEquipment')?.addEventListener('click', handleAddCustomEquipment);
     document.getElementById('customEquipmentInput')?.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
@@ -900,6 +901,16 @@ function updateSummary() {
         html += '</ul>';
     }
 
+    // Vehicles
+    if (currentCharacter.vehicles && currentCharacter.vehicles.length > 0) {
+        html += '<h4>Vehicles</h4>';
+        html += '<ul style="font-size: 0.9em;">';
+        currentCharacter.vehicles.forEach(vehicle => {
+            html += `<li>${vehicle.name} (Price: ${vehicle.price})</li>`;
+        });
+        html += '</ul>';
+    }
+
     summary.innerHTML = html || '<p class="empty-state">Start creating your character...</p>';
 }
 
@@ -1019,6 +1030,20 @@ function generateCharacterSheet() {
                         return `<tr><td>${equipment.name}</td><td>${priceLabel} (${equipment.price})</td><td colspan="7">${equipment.description || ''}</td></tr>`;
                     }
                     return `<tr><td>${equipment.name}</td><td colspan="8"><em>Custom item</em></td></tr>`;
+                }).join('')}
+                </tbody>
+            </table>
+        </div>` : ''}
+
+        ${currentCharacter.vehicles && currentCharacter.vehicles.length ? `
+        <h4>Vehicles</h4>
+        <div class="sheet-equipment-summary">
+            <table>
+                <thead><tr><th>Name</th><th>Type</th><th>Price</th><th>Control</th><th>Speed</th><th>Body</th><th>Protection</th><th>Description</th></tr></thead>
+                <tbody>
+                ${currentCharacter.vehicles.map(v => {
+                    const priceLabel = VEHICLE_RANK_LABELS[v.price] || v.price;
+                    return `<tr><td>${v.name}</td><td>${v.type}</td><td>${priceLabel} (${v.price})</td><td>${v.control}</td><td>${v.speed}</td><td>${v.body}</td><td>${v.protection}</td><td>${v.description || ''}</td></tr>`;
                 }).join('')}
                 </tbody>
             </table>
@@ -1207,6 +1232,7 @@ function restoreCharacterUI() {
     renderContactsList();
     document.getElementById('equipmentSection').classList.remove('hidden');
     renderEquipmentList();
+    renderVehicleList();
 
     if (c.secondaryAbilities && c.secondaryAbilities.baseResources) {
         document.getElementById('purchaseSection').classList.remove('hidden');
@@ -1240,7 +1266,7 @@ function updateUI() {
 
 // Modal state
 let modalState = {
-    mode: null, // 'category' | 'power' | 'talent-category' | 'talent-skill' | 'contact-category' | 'contact-type' | 'contact-name' | 'weapon-category' | 'weapon' | 'other-stuff'
+    mode: null, // 'category' | 'power' | 'talent-category' | 'talent-skill' | 'contact-category' | 'contact-type' | 'contact-name' | 'weapon-category' | 'weapon' | 'other-stuff' | 'vehicle'
     selectedCategory: null,
     selectedPower: null,
     selectedTalent: null,
@@ -1249,7 +1275,8 @@ let modalState = {
     selectedWeaponCategory: null,
     selectedWeapon: null,
     selectedOtherStuff: null,
-    context: null // 'power' | 'talent' | 'contact' | 'weapon' | 'other-stuff'
+    selectedVehicle: null,
+    context: null // 'power' | 'talent' | 'contact' | 'weapon' | 'other-stuff' | 'vehicle'
 };
 
 /**
@@ -1639,6 +1666,10 @@ function handleModalConfirm() {
 
         addEquipmentToCharacter(equipmentItem);
         closeModal();
+
+    } else if (modalState.mode === 'vehicle' && modalState.selectedVehicle) {
+        addVehicleToCharacter({ ...modalState.selectedVehicle });
+        closeModal();
     }
 }
 
@@ -1657,6 +1688,7 @@ function closeModal() {
         selectedWeaponCategory: null,
         selectedWeapon: null,
         selectedOtherStuff: null,
+        selectedVehicle: null,
         context: null
     };
 }
@@ -2803,6 +2835,121 @@ function showOtherStuffSelection() {
     });
 
     modal.classList.add('active');
+}
+
+/**
+ * Handle "Choose Land Vehicle" button click
+ */
+function handleChooseLandVehicle() {
+    modalState.context = 'vehicle';
+    modalState.selectedVehicle = null;
+
+    showLandVehicleSelection();
+}
+
+/**
+ * Show the land vehicle selection in the modal
+ */
+function showLandVehicleSelection() {
+    const modal = document.getElementById('powerModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    const modalBack = document.getElementById('modalBack');
+    const modalConfirm = document.getElementById('modalConfirm');
+
+    modalState.mode = 'vehicle';
+    modalTitle.textContent = 'Choose Land Vehicle';
+    modalBack.classList.add('hidden');
+    modalConfirm.classList.add('hidden');
+    modalConfirm.textContent = 'Add Vehicle';
+
+    const vehicles = getAllLandVehicles();
+    let html = '';
+    vehicles.forEach((vehicle, index) => {
+        const priceLabel = VEHICLE_RANK_LABELS[vehicle.price] || vehicle.price;
+        html += `
+            <div class="power-option" data-vehicle-index="${index}">
+                <div class="power-option-name">${vehicle.name} <span class="weapon-price-tag">Price: ${priceLabel} (${vehicle.price})</span></div>
+                <div class="power-option-details">${formatVehicleStats(vehicle)}${vehicle.description ? `<br>${vehicle.description}` : ''}</div>
+            </div>
+        `;
+    });
+
+    modalBody.innerHTML = html;
+
+    document.querySelectorAll('.power-option').forEach(option => {
+        option.addEventListener('click', () => {
+            document.querySelectorAll('.power-option').forEach(opt => opt.classList.remove('selected'));
+            option.classList.add('selected');
+            const vehicleIndex = parseInt(option.dataset.vehicleIndex);
+            modalState.selectedVehicle = vehicles[vehicleIndex];
+            modalConfirm.classList.remove('hidden');
+        });
+    });
+
+    modal.classList.add('active');
+}
+
+/**
+ * Format a vehicle's stat line (type, control, speed, body, protection)
+ */
+function formatVehicleStats(vehicle) {
+    const rank = r => `${VEHICLE_RANK_LABELS[r] || r} (${r})`;
+    return `Type: ${vehicle.type} | Control: ${rank(vehicle.control)} | Speed: ${rank(vehicle.speed)} | Body: ${rank(vehicle.body)} | Protection: ${rank(vehicle.protection)}`;
+}
+
+/**
+ * Add a vehicle to the character and update UI
+ */
+function addVehicleToCharacter(vehicle) {
+    currentCharacter.vehicles.push(vehicle);
+
+    renderVehicleList();
+    updateSummary();
+    saveCharacterToLocalStorage();
+}
+
+/**
+ * Remove a vehicle from the character
+ */
+function removeVehicleFromCharacter(index) {
+    showConfirmModal('Remove this vehicle?', 'Remove Vehicle', () => {
+        currentCharacter.vehicles.splice(index, 1);
+
+        renderVehicleList();
+        updateSummary();
+        saveCharacterToLocalStorage();
+    });
+}
+
+/**
+ * Render the vehicle list (kept separate from carried equipment)
+ */
+function renderVehicleList() {
+    const vehicleList = document.getElementById('vehicleList');
+
+    if (!currentCharacter.vehicles || currentCharacter.vehicles.length === 0) {
+        vehicleList.innerHTML = '<p class="empty-state">No vehicles added yet. Click "Choose Land Vehicle" to add one.</p>';
+        return;
+    }
+
+    let html = '';
+    currentCharacter.vehicles.forEach((vehicle, index) => {
+        const priceLabel = VEHICLE_RANK_LABELS[vehicle.price] || vehicle.price;
+        html += `
+            <div class="equipment-card">
+                <div class="equipment-info">
+                    <div class="equipment-name">${vehicle.name} <span class="weapon-price-tag">Price: ${priceLabel} (${vehicle.price})</span></div>
+                    <div class="equipment-details">${formatVehicleStats(vehicle)}${vehicle.description ? `<br>${vehicle.description}` : ''}</div>
+                </div>
+                <div class="equipment-actions">
+                    <button class="btn btn-warning btn-small" onclick="removeVehicleFromCharacter(${index})">Remove</button>
+                </div>
+            </div>
+        `;
+    });
+
+    vehicleList.innerHTML = html;
 }
 
 /**

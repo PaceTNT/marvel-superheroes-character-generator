@@ -56,6 +56,7 @@ let currentCharacter = {
     talents: [],
     contacts: [],
     equipment: [],
+    vehicles: [],
     name: "",
     realName: "",
     backstory: "",
@@ -151,6 +152,7 @@ function resetCharacter() {
         talents: [],
         contacts: [],
         equipment: [],
+        vehicles: [],
         name: "",
         realName: "",
         backstory: "",
@@ -225,7 +227,9 @@ function resetAllUI() {
         '<p class="empty-state">No contacts added yet. Click "Choose Contact" to begin.</p>';
     document.getElementById('customEquipmentInput').value = '';
     document.getElementById('equipmentList').innerHTML =
-        '<p class="empty-state">No equipment added yet. Click "Choose Weapon" or add a custom item.</p>';
+        '<p class="empty-state">No equipment added yet. Click "Choose Weapon", "Choose Other Stuff", or add a custom item.</p>';
+    document.getElementById('vehicleList').innerHTML =
+        '<p class="empty-state">No vehicles added yet. Click "Choose Land Vehicle" to add one.</p>';
 
     // Reset step 5 form inputs
     document.getElementById('characterName').value = '';
@@ -383,6 +387,7 @@ function migrateCharacterFormat() {
     if (!currentCharacter.talents) currentCharacter.talents = [];
     if (!currentCharacter.contacts) currentCharacter.contacts = [];
     if (!currentCharacter.equipment) currentCharacter.equipment = [];
+    if (!currentCharacter.vehicles) currentCharacter.vehicles = [];
 
     // Ensure image prompt fields exist
     if (!currentCharacter.genderAppearance) currentCharacter.genderAppearance = "Androgynous";

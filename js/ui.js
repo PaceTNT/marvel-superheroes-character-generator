@@ -93,6 +93,7 @@ function initializeEventListeners() {
 
     // Equipment
     document.getElementById('chooseWeapon')?.addEventListener('click', handleChooseWeapon);
+    document.getElementById('chooseOtherStuff')?.addEventListener('click', handleChooseOtherStuff);
     document.getElementById('addCustomEquipment')?.addEventListener('click', handleAddCustomEquipment);
     document.getElementById('customEquipmentInput')?.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
@@ -893,7 +894,7 @@ function updateSummary() {
         html += '<ul style="font-size: 0.9em;">';
         currentCharacter.equipment.forEach(item => {
             const equipment = typeof item === 'string' ? { name: item } : item;
-            const priceText = equipment.source === 'weapon' ? ` (Price: ${equipment.price})` : '';
+            const priceText = (equipment.source === 'weapon' || equipment.source === 'other-stuff') ? ` (Price: ${equipment.price})` : '';
             html += `<li>${equipment.name}${priceText}</li>`;
         });
         html += '</ul>';
@@ -1012,6 +1013,10 @@ function generateCharacterSheet() {
                         const priceLabel = WEAPON_PRICE_LABELS[equipment.price] || equipment.price;
                         const typeLabel = WEAPON_TYPE_LABELS[equipment.type] || equipment.type;
                         return `<tr><td>${equipment.name}</td><td>${priceLabel} (${equipment.price})</td><td>${equipment.range}</td><td>${equipment.damage}</td><td>${typeLabel}</td><td>${equipment.rate}</td><td>${equipment.shots}</td><td>${equipment.material}</td><td>${equipment.notes || ''}</td></tr>`;
+                    }
+                    if (equipment.source === 'other-stuff') {
+                        const priceLabel = WEAPON_PRICE_LABELS[equipment.price] || equipment.price;
+                        return `<tr><td>${equipment.name}</td><td>${priceLabel} (${equipment.price})</td><td colspan="7">${equipment.description || ''}</td></tr>`;
                     }
                     return `<tr><td>${equipment.name}</td><td colspan="8"><em>Custom item</em></td></tr>`;
                 }).join('')}
@@ -1235,7 +1240,7 @@ function updateUI() {
 
 // Modal state
 let modalState = {
-    mode: null, // 'category' | 'power' | 'talent-category' | 'talent-skill' | 'contact-category' | 'contact-type' | 'contact-name' | 'weapon-category' | 'weapon'
+    mode: null, // 'category' | 'power' | 'talent-category' | 'talent-skill' | 'contact-category' | 'contact-type' | 'contact-name' | 'weapon-category' | 'weapon' | 'other-stuff'
     selectedCategory: null,
     selectedPower: null,
     selectedTalent: null,
@@ -1243,7 +1248,8 @@ let modalState = {
     selectedContactCategory: null,
     selectedWeaponCategory: null,
     selectedWeapon: null,
-    context: null // 'power' | 'talent' | 'contact' | 'weapon'
+    selectedOtherStuff: null,
+    context: null // 'power' | 'talent' | 'contact' | 'weapon' | 'other-stuff'
 };
 
 /**
@@ -1622,6 +1628,17 @@ function handleModalConfirm() {
 
         addEquipmentToCharacter(equipmentItem);
         closeModal();
+
+    } else if (modalState.mode === 'other-stuff' && modalState.selectedOtherStuff) {
+        const equipmentItem = {
+            name: modalState.selectedOtherStuff.name,
+            source: 'other-stuff',
+            price: modalState.selectedOtherStuff.price,
+            description: modalState.selectedOtherStuff.description
+        };
+
+        addEquipmentToCharacter(equipmentItem);
+        closeModal();
     }
 }
 
@@ -1639,6 +1656,7 @@ function closeModal() {
         selectedContactCategory: null,
         selectedWeaponCategory: null,
         selectedWeapon: null,
+        selectedOtherStuff: null,
         context: null
     };
 }
@@ -2735,6 +2753,59 @@ function showWeaponSelection(categoryName) {
 }
 
 /**
+ * Handle "Choose Other Stuff" button click
+ */
+function handleChooseOtherStuff() {
+    modalState.context = 'other-stuff';
+    modalState.selectedOtherStuff = null;
+
+    showOtherStuffSelection();
+}
+
+/**
+ * Show the non-weapon equipment ("other stuff") selection in the modal
+ */
+function showOtherStuffSelection() {
+    const modal = document.getElementById('powerModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    const modalBack = document.getElementById('modalBack');
+    const modalConfirm = document.getElementById('modalConfirm');
+
+    modalState.mode = 'other-stuff';
+    modalTitle.textContent = 'Choose Other Stuff';
+    modalBack.classList.add('hidden');
+    modalConfirm.classList.add('hidden');
+    modalConfirm.textContent = 'Add to Equipment';
+
+    const items = getAllOtherStuff();
+    let html = '';
+    items.forEach((item, index) => {
+        const priceLabel = WEAPON_PRICE_LABELS[item.price] || item.price;
+        html += `
+            <div class="power-option" data-other-stuff-index="${index}">
+                <div class="power-option-name">${item.name} <span class="weapon-price-tag">Price: ${priceLabel} (${item.price})</span></div>
+                <div class="power-option-details">${item.description}</div>
+            </div>
+        `;
+    });
+
+    modalBody.innerHTML = html;
+
+    document.querySelectorAll('.power-option').forEach(option => {
+        option.addEventListener('click', () => {
+            document.querySelectorAll('.power-option').forEach(opt => opt.classList.remove('selected'));
+            option.classList.add('selected');
+            const itemIndex = parseInt(option.dataset.otherStuffIndex);
+            modalState.selectedOtherStuff = items[itemIndex];
+            modalConfirm.classList.remove('hidden');
+        });
+    });
+
+    modal.classList.add('active');
+}
+
+/**
  * Handle "Add Custom Item" button click / Enter key
  */
 function handleAddCustomEquipment() {
@@ -2780,7 +2851,7 @@ function renderEquipmentList() {
     const equipmentList = document.getElementById('equipmentList');
 
     if (!currentCharacter.equipment || currentCharacter.equipment.length === 0) {
-        equipmentList.innerHTML = '<p class="empty-state">No equipment added yet. Click "Choose Weapon" or add a custom item.</p>';
+        equipmentList.innerHTML = '<p class="empty-state">No equipment added yet. Click "Choose Weapon", "Choose Other Stuff", or add a custom item.</p>';
         return;
     }
 
@@ -2797,6 +2868,19 @@ function renderEquipmentList() {
                     <div class="equipment-info">
                         <div class="equipment-name">${equipment.name} <span class="weapon-price-tag">Price: ${priceLabel} (${equipment.price})</span></div>
                         <div class="equipment-details">Range: ${equipment.range} | Damage: ${equipment.damage} (${typeLabel}) | Rate: ${equipment.rate} | Shots: ${equipment.shots} | Material: ${equipment.material}${equipment.notes ? ` | ${equipment.notes}` : ''}</div>
+                    </div>
+                    <div class="equipment-actions">
+                        <button class="btn btn-warning btn-small" onclick="removeEquipmentFromCharacter(${index})">Remove</button>
+                    </div>
+                </div>
+            `;
+        } else if (equipment.source === 'other-stuff') {
+            const priceLabel = WEAPON_PRICE_LABELS[equipment.price] || equipment.price;
+            html += `
+                <div class="equipment-card">
+                    <div class="equipment-info">
+                        <div class="equipment-name">${equipment.name} <span class="weapon-price-tag">Price: ${priceLabel} (${equipment.price})</span></div>
+                        <div class="equipment-details">${equipment.description || ''}</div>
                     </div>
                     <div class="equipment-actions">
                         <button class="btn btn-warning btn-small" onclick="removeEquipmentFromCharacter(${index})">Remove</button>

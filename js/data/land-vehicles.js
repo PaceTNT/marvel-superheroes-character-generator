@@ -40,7 +40,11 @@ const LAND_VEHICLES_DATA = [
 
 // Rank labels for vehicle stats (extends WEAPON_PRICE_LABELS with vehicle-only values)
 const VEHICLE_RANK_LABELS = Object.assign({}, WEAPON_PRICE_LABELS, {
+  "ShX": "Shift X",
+  "ShY": "Shift Y",
   "ShZ": "Shift Z",
+  "CL1000": "Class 1000",
+  "CL3000": "Class 3000",
   "0": "None"
 });
 

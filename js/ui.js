@@ -95,6 +95,11 @@ function initializeEventListeners() {
     document.getElementById('chooseWeapon')?.addEventListener('click', handleChooseWeapon);
     document.getElementById('chooseOtherStuff')?.addEventListener('click', handleChooseOtherStuff);
     document.getElementById('chooseLandVehicle')?.addEventListener('click', handleChooseLandVehicle);
+    document.getElementById('chooseAirVehicle')?.addEventListener('click', () => handleChooseOtherVehicle('Air', 'Choose Air Vehicle'));
+    document.getElementById('chooseWaterVehicle')?.addEventListener('click', () => handleChooseOtherVehicle('Water', 'Choose Water Vehicle'));
+    document.getElementById('chooseSubVehicle')?.addEventListener('click', () => handleChooseOtherVehicle('Sub', 'Choose Sub'));
+    document.getElementById('chooseSpaceVehicle')?.addEventListener('click', () => handleChooseOtherVehicle('Space', 'Choose Space Vehicle'));
+    document.getElementById('chooseRailedVehicle')?.addEventListener('click', () => handleChooseOtherVehicle('Railed', 'Choose Railed Vehicle'));
     document.getElementById('addCustomEquipment')?.addEventListener('click', handleAddCustomEquipment);
     document.getElementById('customEquipmentInput')?.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
@@ -2844,13 +2849,23 @@ function handleChooseLandVehicle() {
     modalState.context = 'vehicle';
     modalState.selectedVehicle = null;
 
-    showLandVehicleSelection();
+    showVehicleSelection('Choose Land Vehicle', getAllLandVehicles());
 }
 
 /**
- * Show the land vehicle selection in the modal
+ * Handle the Air/Water/Sub/Space/Railed vehicle button clicks
  */
-function showLandVehicleSelection() {
+function handleChooseOtherVehicle(type, title) {
+    modalState.context = 'vehicle';
+    modalState.selectedVehicle = null;
+
+    showVehicleSelection(title, getOtherVehiclesByType(type));
+}
+
+/**
+ * Show a list of vehicles to choose from in the modal
+ */
+function showVehicleSelection(title, vehicles) {
     const modal = document.getElementById('powerModal');
     const modalTitle = document.getElementById('modalTitle');
     const modalBody = document.getElementById('modalBody');
@@ -2858,12 +2873,11 @@ function showLandVehicleSelection() {
     const modalConfirm = document.getElementById('modalConfirm');
 
     modalState.mode = 'vehicle';
-    modalTitle.textContent = 'Choose Land Vehicle';
+    modalTitle.textContent = title;
     modalBack.classList.add('hidden');
     modalConfirm.classList.add('hidden');
     modalConfirm.textContent = 'Add Vehicle';
 
-    const vehicles = getAllLandVehicles();
     let html = '';
     vehicles.forEach((vehicle, index) => {
         const priceLabel = VEHICLE_RANK_LABELS[vehicle.price] || vehicle.price;
@@ -2929,7 +2943,7 @@ function renderVehicleList() {
     const vehicleList = document.getElementById('vehicleList');
 
     if (!currentCharacter.vehicles || currentCharacter.vehicles.length === 0) {
-        vehicleList.innerHTML = '<p class="empty-state">No vehicles added yet. Click "Choose Land Vehicle" to add one.</p>';
+        vehicleList.innerHTML = '<p class="empty-state">No vehicles added yet. Click a "Choose ... Vehicle" button to add one.</p>';
         return;
     }
 

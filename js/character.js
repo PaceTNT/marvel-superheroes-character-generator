@@ -229,7 +229,7 @@ function resetAllUI() {
     document.getElementById('equipmentList').innerHTML =
         '<p class="empty-state">No equipment added yet. Click "Choose Weapon", "Choose Other Stuff", or add a custom item.</p>';
     document.getElementById('vehicleList').innerHTML =
-        '<p class="empty-state">No vehicles added yet. Click "Choose Land Vehicle" to add one.</p>';
+        '<p class="empty-state">No vehicles added yet. Click a "Choose ... Vehicle" button to add one.</p>';
 
     // Reset step 5 form inputs
     document.getElementById('characterName').value = '';
